@@ -54,12 +54,12 @@ export default function Hero({ onScrollToForm }) {
         {/* Tag line */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 rounded-full bg-surface-raised/80 border border-border-bright/50 backdrop-blur-sm">
           <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-          <span className="font-mono text-xs text-muted-light tracking-wider">POWERED BY AI · 11-STEP PIPELINE · OVERLEAF PDF</span>
+          <span className="font-mono text-xs text-muted-light tracking-wider">FREE AI RESUME BUILDER · ATS OPTIMIZER · PDF EXPORT</span>
         </div>
 
-        {/* Main headline */}
+        {/* Main headline — SEO-optimized H1 */}
         <h1 className="font-serif text-6xl md:text-[5.5rem] leading-[1.02] tracking-tight mb-8">
-          <span className="block text-text">Beat the Bots.</span>
+          <span className="block text-text">Build ATS Resumes</span>
           <span className="block mt-3 text-gradient" style={{
             background: 'linear-gradient(135deg, #FF9F43, #FFD700, #FF9F43)',
             WebkitBackgroundClip: 'text',
@@ -67,14 +67,14 @@ export default function Hero({ onScrollToForm }) {
             backgroundSize: '200% 200%',
             animation: 'gradient-x 4s ease infinite',
           }}>
-            Land the Interview.
+            That Land Interviews.
           </span>
         </h1>
 
-        {/* Subheadline */}
+        {/* Subheadline — keyword-rich */}
         <p className="text-muted-light text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-sans">
-          Paste your resume and a job description. AI rewrites, keyword-optimizes,
-          and compiles a recruiter-ready PDF — all in under 90 seconds.
+          The free AI resume builder that rewrites your resume to score <strong className="text-text">90+ on Applicant Tracking Systems</strong>. 
+          Paste your resume and job description — get an ATS-optimized, keyword-matched PDF in 90 seconds.
         </p>
 
         {/* CTA */}
@@ -87,7 +87,7 @@ export default function Hero({ onScrollToForm }) {
                      hover:-translate-y-0.5"
         >
           <span className="relative z-10 flex items-center gap-2">
-            Tailor My Resume
+            Build My Resume — Free
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform">
               <line x1="5" y1="12" x2="19" y2="12"/>
               <polyline points="12 5 19 12 12 19"/>
@@ -95,8 +95,11 @@ export default function Hero({ onScrollToForm }) {
           </span>
         </button>
 
+        {/* Trust badges */}
+        <p className="text-muted text-xs font-mono mt-4 tracking-wider">NO SIGN-UP REQUIRED · YOUR DATA NEVER STORED · 100% PRIVATE</p>
+
         {/* Stats row */}
-        <div className="flex items-center justify-center gap-8 mt-12">
+        <div className="flex items-center justify-center gap-8 mt-10">
           {[
             { label: 'AI Models', value: '3', icon: '🧠' },
             { label: 'Pipeline Steps', value: '11', icon: '⚡' },

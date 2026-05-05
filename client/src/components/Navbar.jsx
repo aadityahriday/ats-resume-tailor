@@ -26,7 +26,7 @@ export default function Navbar({ onGenerate, canGenerate, isGenerating }) {
             <span className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-amber animate-ping opacity-30" />
           </div>
           <h1 className="font-serif text-xl text-text tracking-tight">
-            ATS Resume Tailor
+            ResumeCopy
           </h1>
           <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[9px] font-mono text-amber/80 bg-amber/8 border border-amber/15 uppercase tracking-wider">
             Pro

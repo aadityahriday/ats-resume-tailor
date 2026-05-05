@@ -2,15 +2,186 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="ATS Resume Tailor — Paste your resume and a job description. Claude Opus rewrites, keyword-optimizes, and compiles a recruiter-ready PDF in under 90 seconds." />
-    <title>ATS Resume Tailor — Beat the Bots. Land the Interview.</title>
+
+    <!-- ═══ Primary SEO Meta Tags ═══ -->
+    <title>ResumeCopy — Free AI Resume Builder & ATS Resume Optimizer | Score 90+ on ATS</title>
+    <meta name="description" content="ResumeCopy is the #1 free AI resume builder and ATS resume optimizer. Paste your resume + job description and get an ATS-optimized, keyword-matched PDF resume in under 90 seconds. Score 90+ on Applicant Tracking Systems." />
+    <meta name="keywords" content="resume builder, ATS resume, AI resume builder, ATS resume optimizer, free resume builder, resume maker, ATS score checker, resume keyword optimizer, ATS-friendly resume, resume tailor, job application tool, resume PDF generator, applicant tracking system, AI resume writer, resume optimization, ATS score, resume scanner, resume checker, professional resume, resume template, ATS-compliant resume, keyword-optimized resume, beat ATS, resume formatting tool, career tools" />
+    <meta name="author" content="ResumeCopy" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <link rel="canonical" href="https://resumecopy.com/" />
+    <meta name="theme-color" content="#FF9F43" />
+
+    <!-- ═══ Open Graph / Facebook ═══ -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://resumecopy.com/" />
+    <meta property="og:title" content="ResumeCopy — Free AI Resume Builder & ATS Optimizer | Score 90+" />
+    <meta property="og:description" content="Build an ATS-optimized resume in 90 seconds. AI rewrites, keyword-matches, and compiles a recruiter-ready PDF. Free to use. Powered by Claude, ChatGPT, and Gemini." />
+    <meta property="og:image" content="https://resumecopy.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="ResumeCopy" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- ═══ Twitter Card ═══ -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://resumecopy.com/" />
+    <meta name="twitter:title" content="ResumeCopy — Free AI Resume Builder & ATS Optimizer" />
+    <meta name="twitter:description" content="Paste your resume + job description. AI rewrites, keyword-optimizes, and delivers an ATS-ready PDF in 90 seconds. Score 90+ guaranteed." />
+    <meta name="twitter:image" content="https://resumecopy.com/og-image.png" />
+
+    <!-- ═══ Structured Data: WebApplication Schema ═══ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "ResumeCopy",
+      "url": "https://resumecopy.com",
+      "description": "Free AI-powered resume builder and ATS optimizer. Paste your resume and a job description to get a keyword-optimized, ATS-friendly PDF resume in under 90 seconds.",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "creator": {
+        "@type": "Organization",
+        "name": "ResumeCopy"
+      },
+      "featureList": [
+        "AI Resume Rewriting",
+        "ATS Score Optimization",
+        "Keyword Matching",
+        "PDF Resume Generation",
+        "LaTeX Resume Compilation",
+        "Multi-AI Provider Support (Claude, ChatGPT, Gemini)",
+        "Deterministic ATS Scoring Engine",
+        "Real-time Score Comparison"
+      ],
+      "screenshot": "https://resumecopy.com/og-image.png"
+    }
+    </script>
+
+    <!-- ═══ Structured Data: FAQPage Schema ═══ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is an ATS resume?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "An ATS (Applicant Tracking System) resume is a resume specifically formatted and keyword-optimized to pass through automated screening software used by 99% of Fortune 500 companies. ATS software scans resumes for relevant keywords, proper formatting, and standard section headers before a human recruiter ever sees them. ResumeCopy automatically optimizes your resume to score 90+ on ATS systems."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does the AI resume builder work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ResumeCopy uses a 3-step process: (1) Paste your current resume and the target job description, (2) AI analyzes the job requirements and rewrites your resume with matched keywords, quantified achievements, and strong action verbs, (3) Your optimized resume is compiled into a professional LaTeX PDF. The entire process takes under 90 seconds."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is ResumeCopy free to use?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, ResumeCopy is completely free. You only need your own AI API key (from Claude, ChatGPT, or Gemini — all offer free tiers) and an Overleaf account for PDF compilation. Your data is processed in-memory and never stored on any server."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What ATS score should my resume have?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A score of 80+ is considered good, but 90+ significantly increases your chances of getting past automated screening. ResumeCopy's AI is engineered to rewrite your resume targeting a 90+ ATS score by matching JD keywords, using proper section headers, quantifying achievements, and including strong action verbs."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which AI models does ResumeCopy support?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ResumeCopy supports three leading AI models: Claude Opus 4 by Anthropic (with extended thinking for deep analysis), GPT-4.1 by OpenAI (latest flagship model), and Gemini 2.5 Pro by Google (advanced reasoning). You can switch between providers at any time."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is my resume data secure?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Absolutely. ResumeCopy processes everything in-memory. Your API keys are stored only in your browser's localStorage and never transmitted to our servers. Your resume and job description are sent directly to your chosen AI provider for processing and are never stored, logged, or shared."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- ═══ Structured Data: HowTo Schema ═══ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "How to Build an ATS-Optimized Resume",
+      "description": "Create a keyword-optimized, ATS-friendly resume using AI in under 90 seconds with ResumeCopy.",
+      "totalTime": "PT2M",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "Paste Your Resume and Job Description",
+          "text": "Copy and paste your current resume and the full job description into ResumeCopy's input fields. Include all requirements, responsibilities, and preferred qualifications for the best optimization results."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "AI Rewrites and Scores Your Resume",
+          "text": "Your chosen AI model (Claude, ChatGPT, or Gemini) deeply analyzes the job description, extracts all keywords, and rewrites every bullet point with matched keywords, quantified impact metrics, and strong action verbs targeting a 90+ ATS score."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "Download Your ATS-Optimized PDF",
+          "text": "Your optimized resume is automatically converted to professional LaTeX and compiled on Overleaf into a stunning, ATS-parseable PDF that you can download immediately and submit to any job application."
+        }
+      ]
+    }
+    </script>
+
+    <!-- ═══ Structured Data: Organization Schema ═══ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "ResumeCopy",
+      "url": "https://resumecopy.com",
+      "logo": "https://resumecopy.com/logo.png",
+      "sameAs": [
+        "https://github.com/aadityahriday/ats-resume-tailor"
+      ]
+    }
+    </script>
+
+    <!-- ═══ Fonts ═══ -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
   </head>
   <body>
+    <!-- ═══ Hidden SEO Content (Accessible to crawlers + screen readers) ═══ -->
+    <noscript>
+      <h1>ResumeCopy — Free AI Resume Builder & ATS Resume Optimizer</h1>
+      <p>ResumeCopy is the #1 free AI-powered resume builder and ATS resume optimizer. Build ATS-optimized resumes that score 90+ on Applicant Tracking Systems. Powered by Claude, ChatGPT, and Gemini AI.</p>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

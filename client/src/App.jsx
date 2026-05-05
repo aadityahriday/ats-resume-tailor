@@ -390,16 +390,35 @@ function App() {
 
       {/* Footer */}
       <footer className="text-center py-10 border-t border-border/40 mt-20">
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber/50" />
-          <span className="font-serif text-sm text-text/60">ATS Resume Tailor</span>
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber/50" />
+            <span className="font-serif text-sm text-text/60">ResumeCopy</span>
+          </div>
+          <p className="font-mono text-muted/60 text-[11px] mb-3">
+            Free AI Resume Builder & ATS Resume Optimizer · Powered by Claude · ChatGPT · Gemini
+          </p>
+          <p className="text-muted/40 text-[11px] mb-4 max-w-lg mx-auto leading-relaxed">
+            ResumeCopy helps job seekers build ATS-optimized resumes that pass Applicant Tracking Systems like Taleo, Workday, Greenhouse, and Lever.
+            Your resume and job description are processed in-memory and never stored on any server.
+          </p>
+          <div className="flex items-center justify-center gap-4 text-[10px] font-mono text-muted/40 mb-3">
+            <a href="#what-is-ats" className="hover:text-amber transition-colors">What is ATS?</a>
+            <span>·</span>
+            <a href="#how-it-works" className="hover:text-amber transition-colors">How It Works</a>
+            <span>·</span>
+            <a href="#why-resumecopy" className="hover:text-amber transition-colors">Features</a>
+            <span>·</span>
+            <a href="#ats-scoring" className="hover:text-amber transition-colors">ATS Scoring</a>
+            <span>·</span>
+            <a href="#faq" className="hover:text-amber transition-colors">FAQ</a>
+            <span>·</span>
+            <a href="#setup-panel" className="hover:text-amber transition-colors">Setup</a>
+          </div>
+          <p className="text-muted/30 text-[10px]">
+            © {new Date().getFullYear()} ResumeCopy. Free AI resume builder for job seekers worldwide.
+          </p>
         </div>
-        <p className="font-mono text-muted/60 text-[11px]">
-          Powered by Claude · ChatGPT · Gemini · © {new Date().getFullYear()}
-        </p>
-        <p className="text-muted/40 text-[11px] mt-1.5">
-          Your resume and job description are processed in-memory and never stored on any server.
-        </p>
       </footer>
 
       {showDiff && diffData && (
