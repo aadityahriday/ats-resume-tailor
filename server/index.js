@@ -270,11 +270,15 @@ app.post('/api/score', (req, res) => {
 });
 
 // ─── Start Server ────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`\n  ⚡ ATS Resume Tailor server running on http://localhost:${PORT}`);
-  console.log(`  📊 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`  🔑 Anthropic key: ${process.env.ANTHROPIC_API_KEY ? 'configured' : 'not set (use UI)'}`);
-  console.log(`  🔑 OpenAI key: ${process.env.OPENAI_API_KEY ? 'configured' : 'not set (use UI)'}`);
-  console.log(`  🔑 Gemini key: ${process.env.GEMINI_API_KEY ? 'configured' : 'not set (use UI)'}`);
-  console.log(`  📄 Overleaf session: ${process.env.OVERLEAF_SESSION_COOKIE ? 'configured' : 'not set (use UI)'}\n`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`\n  ⚡ ATS Resume Tailor server running on http://localhost:${PORT}`);
+    console.log(`  📊 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`  🔑 Anthropic key: ${process.env.ANTHROPIC_API_KEY ? 'configured' : 'not set (use UI)'}`);
+    console.log(`  🔑 OpenAI key: ${process.env.OPENAI_API_KEY ? 'configured' : 'not set (use UI)'}`);
+    console.log(`  🔑 Gemini key: ${process.env.GEMINI_API_KEY ? 'configured' : 'not set (use UI)'}`);
+    console.log(`  📄 Overleaf session: ${process.env.OVERLEAF_SESSION_COOKIE ? 'configured' : 'not set (use UI)'}\n`);
+  });
+}
+
+module.exports = app;

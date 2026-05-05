@@ -38,7 +38,7 @@ Features a stunning, fully animated node-based workflow UI.
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ats-resume-tailor.git
+git clone https://github.com/aadityahriday/ats-resume-tailor.git
 cd ats-resume-tailor
 
 # Install server dependencies
