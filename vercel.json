@@ -1,8 +1,14 @@
 {
   "version": 2,
+  "framework": null,
   "buildCommand": "npm run build --workspace=client",
   "outputDirectory": "dist",
-  "installCommand": "npm install",
+  "installCommand": "npm install --workspaces --include-workspace-root",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "server/**"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
