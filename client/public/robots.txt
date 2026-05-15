@@ -1,36 +1,30 @@
 # ResumeCopy — robots.txt
-# https://resumecopy.com
+# https://www.resumecopy.com
 
+# --------------------------------------------------
+# Global Rules for all Standard Crawlers & AI Bots
+# --------------------------------------------------
+# By not explicitly blocking AI bots here, they will fall under
+# this global rule, allowing them to crawl your site for AI answers
+# while still protecting your backend API.
 User-agent: *
 Allow: /
 Disallow: /api/
-Sitemap: https://resumecopy.com/sitemap.xml
 
+# --------------------------------------------------
+# Search Engine Specific Rules
+# (Note: Specific agents ignore the global '*' rules, 
+# so we must redefine Disallows for them)
+# --------------------------------------------------
 User-agent: Googlebot
 Allow: /
+Disallow: /api/
 
 User-agent: Bingbot
 Allow: /
-Crawl-delay: 1
+Disallow: /api/
 
-# Block AI training scrapers (protect content IP)
-User-agent: GPTBot
-Disallow: /
-
-User-agent: ChatGPT-User
-Disallow: /
-
-User-agent: CCBot
-Disallow: /
-
-User-agent: anthropic-ai
-Disallow: /
-
-User-agent: Google-Extended
-Disallow: /
-
-User-agent: Bytespider
-Disallow: /
-
-User-agent: ClaudeBot
-Disallow: /
+# --------------------------------------------------
+# Sitemaps
+# --------------------------------------------------
+Sitemap: https://www.resumecopy.com/sitemap.xml
