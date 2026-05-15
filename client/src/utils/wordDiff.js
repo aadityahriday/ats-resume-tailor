@@ -8,7 +8,7 @@ function lcs(a, b) {
   const n = b.length;
   
   // Optimize for large inputs: if too large, use simplified approach
-  if (m * n > 1000000) {
+  if (m * n > 500000) {
     return simplifiedDiff(a, b);
   }
   
@@ -46,8 +46,18 @@ function simplifiedDiff(a, b) {
   // For very large inputs, use a simpler line-by-line approach
   const aSet = new Set(a);
   const bSet = new Set(b);
-  const common = a.filter(w => bSet.has(w));
-  return common.map(w => ({ text: w, type: 'same' }));
+  
+  const leftSegments = a.map(w => ({
+    text: w,
+    type: bSet.has(w) ? 'same' : 'removed'
+  }));
+  
+  const rightSegments = b.map(w => ({
+    text: w,
+    type: aSet.has(w) ? 'same' : 'added'
+  }));
+  
+  return { leftSegments, rightSegments };
 }
 
 export function computeWordDiff(original, updated) {

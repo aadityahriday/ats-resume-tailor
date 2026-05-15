@@ -1,21 +1,83 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
+
+    <!-- ═══ Google Analytics with Consent Mode v2 (GDPR compliant) ═══ -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XTQB72VC4H"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('consent', 'default', { 'analytics_storage': 'denied' });
+      gtag('js', new Date());
+      gtag('config', 'G-XTQB72VC4H');
+      if (localStorage.getItem('cookie_consent') === 'accepted') {
+        gtag('consent', 'update', { 'analytics_storage': 'granted' });
+      }
+    </script>
+
+
+    <!-- ═══ Structured Data: WebSite Schema (Sitelinks Search Box) ═══ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "ResumeCopy",
+      "url": "https://resumecopy.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://resumecopy.com/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- ═══ Structured Data: WebPage + Speakable Schema (Voice Search Optimization) ═══ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "ResumeCopy — Free AI Resume Builder & ATS Resume Optimizer",
+      "url": "https://resumecopy.com",
+      "speakable": {
+        "@type": "SpeakableSpecification",
+        "cssSelector": ["#hero h1", "#hero p"]
+      },
+      "mainEntity": {
+        "@type": "SoftwareApplication",
+        "name": "ResumeCopy"
+      }
+    }
+    </script>
+
+    <!-- ═══ Favicons ═══ -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- ═══ Primary SEO Meta Tags ═══ -->
     <title>ResumeCopy — Free AI Resume Builder & ATS Resume Optimizer | Score 90+ on ATS</title>
-    <meta name="description" content="ResumeCopy is the #1 free AI resume builder and ATS resume optimizer. Paste your resume + job description and get an ATS-optimized, keyword-matched PDF resume in under 90 seconds. Score 90+ on Applicant Tracking Systems." />
-    <meta name="keywords" content="resume builder, ATS resume, AI resume builder, ATS resume optimizer, free resume builder, resume maker, ATS score checker, resume keyword optimizer, ATS-friendly resume, resume tailor, job application tool, resume PDF generator, applicant tracking system, AI resume writer, resume optimization, ATS score, resume scanner, resume checker, professional resume, resume template, ATS-compliant resume, keyword-optimized resume, beat ATS, resume formatting tool, career tools" />
-    <meta name="author" content="ResumeCopy" />
+    <meta name="description" content="ResumeCopy is the #1 free AI resume builder and ATS resume optimizer. Paste your resume + job description and get an ATS-optimized, keyword-matched PDF resume in under 90 seconds. Score 90+ on Applicant Tracking Systems. Powered by Claude, ChatGPT, and Gemini." />
+    <meta name="keywords" content="resume builder, ATS resume, AI resume builder, ATS resume optimizer, free resume builder, resume maker, ATS score checker, resume keyword optimizer, ATS-friendly resume, resume tailor, job application tool, resume PDF generator, applicant tracking system, AI resume writer, resume optimization, ATS score, resume scanner, resume checker, professional resume, resume template, ATS-compliant resume, keyword-optimized resume, beat ATS, resume formatting tool, career tools, free ATS resume scanner, best resume builder 2026, ATS resume checker free, how to beat ATS, resume keyword scanner" />
+    <meta name="author" content="Aaditya Hriday" />
+    <meta name="creator" content="Aaditya Hriday" />
+    <meta name="publisher" content="ResumeCopy" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <link rel="canonical" href="https://resumecopy.com/" />
-    <meta name="theme-color" content="#FF9F43" />
+    <meta name="theme-color" content="#FF9F43" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#FF9F43" media="(prefers-color-scheme: light)" />
+    <meta name="color-scheme" content="dark light" />
+
+    <!-- ═══ Application Identity & PWA ═══ -->
+    <meta name="application-name" content="ResumeCopy" />
+    <meta name="apple-mobile-web-app-title" content="ResumeCopy" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="content-language" content="en" />
+    <link rel="manifest" href="/manifest.json" />
 
     <!-- ═══ Open Graph / Facebook ═══ -->
     <meta property="og:type" content="website" />
@@ -25,6 +87,7 @@
     <meta property="og:image" content="https://resumecopy.com/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="ResumeCopy — Free AI Resume Builder showing ATS score optimization from 45 to 92" />
     <meta property="og:site_name" content="ResumeCopy" />
     <meta property="og:locale" content="en_US" />
 
@@ -34,25 +97,36 @@
     <meta name="twitter:title" content="ResumeCopy — Free AI Resume Builder & ATS Optimizer" />
     <meta name="twitter:description" content="Paste your resume + job description. AI rewrites, keyword-optimizes, and delivers an ATS-ready PDF in 90 seconds. Score 90+ guaranteed." />
     <meta name="twitter:image" content="https://resumecopy.com/og-image.png" />
+    <meta name="twitter:image:alt" content="ResumeCopy AI Resume Builder interface" />
+    <meta name="twitter:creator" content="@aadityahriday" />
 
-    <!-- ═══ Structured Data: WebApplication Schema ═══ -->
+    <!-- ═══ Structured Data: SoftwareApplication Schema ═══ -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
+      "@type": "SoftwareApplication",
       "name": "ResumeCopy",
       "url": "https://resumecopy.com",
       "description": "Free AI-powered resume builder and ATS optimizer. Paste your resume and a job description to get a keyword-optimized, ATS-friendly PDF resume in under 90 seconds.",
       "applicationCategory": "BusinessApplication",
+      "applicationSubCategory": "Resume Builder",
       "operatingSystem": "Web",
+      "browserRequirements": "Requires JavaScript. Works on all modern browsers.",
+      "softwareVersion": "2.0",
       "offers": {
         "@type": "Offer",
         "price": "0",
-        "priceCurrency": "USD"
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
       },
       "creator": {
-        "@type": "Organization",
-        "name": "ResumeCopy"
+        "@type": "Person",
+        "name": "Aaditya Hriday",
+        "url": "https://github.com/aadityahriday",
+        "sameAs": [
+          "https://github.com/aadityahriday",
+          "https://instagram.com/aadityahriday"
+        ]
       },
       "featureList": [
         "AI Resume Rewriting",
@@ -62,13 +136,66 @@
         "LaTeX Resume Compilation",
         "Multi-AI Provider Support (Claude, ChatGPT, Gemini)",
         "Deterministic ATS Scoring Engine",
-        "Real-time Score Comparison"
+        "Real-time Score Comparison",
+        "Free ATS Resume Scanner",
+        "Resume Keyword Optimizer"
       ],
-      "screenshot": "https://resumecopy.com/og-image.png"
+      "screenshot": "https://resumecopy.com/og-image.png",
+      "datePublished": "2026-01-01",
+      "dateModified": "2026-05-15"
     }
     </script>
 
-    <!-- ═══ Structured Data: FAQPage Schema ═══ -->
+    <!-- ═══ Structured Data: BreadcrumbList (SERP Breadcrumbs) ═══ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://resumecopy.com/" },
+        { "@type": "ListItem", "position": 2, "name": "AI Resume Builder", "item": "https://resumecopy.com/#generator-form" },
+        { "@type": "ListItem", "position": 3, "name": "ATS Score Checker", "item": "https://resumecopy.com/#ats-scoring" },
+        { "@type": "ListItem", "position": 4, "name": "Resume Templates", "item": "https://resumecopy.com/#template-gallery" },
+        { "@type": "ListItem", "position": 5, "name": "About", "item": "https://resumecopy.com/#about" },
+        { "@type": "ListItem", "position": 6, "name": "Privacy Policy", "item": "https://resumecopy.com/#privacy-policy" },
+        { "@type": "ListItem", "position": 7, "name": "Contact", "item": "https://resumecopy.com/#contact" }
+      ]
+    }
+    </script>
+
+    <!-- ═══ Structured Data: Organization Schema (Enhanced for Knowledge Panel) ═══ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "ResumeCopy",
+      "url": "https://resumecopy.com",
+      "logo": "https://resumecopy.com/favicon.svg",
+      "foundingDate": "2026",
+      "founder": {
+        "@type": "Person",
+        "name": "Aaditya Hriday",
+        "url": "https://github.com/aadityahriday",
+        "sameAs": [
+          "https://github.com/aadityahriday",
+          "https://instagram.com/aadityahriday"
+        ]
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "url": "https://github.com/aadityahriday/ats-resume-tailor/issues"
+      },
+      "sameAs": [
+        "https://github.com/aadityahriday/ats-resume-tailor",
+        "https://github.com/aadityahriday",
+        "https://instagram.com/aadityahriday"
+      ],
+      "knowsAbout": ["Resume Building", "ATS Optimization", "AI Resume Writing", "Applicant Tracking Systems"]
+    }
+    </script>
+
+    <!-- ═══ Structured Data: FAQPage Schema (Deprecated for rich results in 2026, kept for AI crawler extraction) ═══ -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -111,7 +238,7 @@
           "name": "Which AI models does ResumeCopy support?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "ResumeCopy supports three leading AI models: Claude Opus 4 by Anthropic (with extended thinking for deep analysis), GPT-4.1 by OpenAI (latest flagship model), and Gemini 2.5 Pro by Google (advanced reasoning). You can switch between providers at any time."
+            "text": "ResumeCopy supports three leading AI models: Gemini 2.5 Flash by Google (free, no credit card needed), GPT-4o by OpenAI, and Claude 3.7 Sonnet by Anthropic (premium quality with extended thinking). You can switch between providers at any time."
           }
         },
         {
@@ -126,7 +253,7 @@
     }
     </script>
 
-    <!-- ═══ Structured Data: HowTo Schema ═══ -->
+    <!-- ═══ Structured Data: HowTo Schema (Deprecated for rich results in 2026, kept for AI crawler extraction) ═══ -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -157,31 +284,116 @@
     }
     </script>
 
-    <!-- ═══ Structured Data: Organization Schema ═══ -->
+    <!-- ═══ Structured Data: Person (Author Entity) ═══ -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "ResumeCopy",
-      "url": "https://resumecopy.com",
-      "logo": "https://resumecopy.com/logo.png",
+      "@type": "Person",
+      "name": "Aaditya Hriday",
+      "url": "https://instagram.com/aadityahriday",
+      "image": "https://resumecopy.com/author.png",
+      "jobTitle": "Software Developer & Creator of ResumeCopy",
       "sameAs": [
-        "https://github.com/aadityahriday/ats-resume-tailor"
-      ]
+        "https://instagram.com/aadityahriday",
+        "https://github.com/aadityahriday"
+      ],
+      "knowsAbout": ["AI Resume Building", "ATS Optimization", "Full-Stack Development", "Machine Learning"]
     }
     </script>
 
-    <!-- ═══ Fonts ═══ -->
+    <!-- ═══ DNS Prefetch & Preconnect (Performance) ═══ -->
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+    <link rel="dns-prefetch" href="https://generativelanguage.googleapis.com" />
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
+
+    <!-- ═══ Fonts (with preconnect + preload for LCP) ═══ -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" as="style" />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <!-- ═══ Hidden SEO Content (Accessible to crawlers + screen readers) ═══ -->
+    <!-- ═══ Skip Navigation (Accessibility) ═══ -->
+    <a href="#main-content" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" tabindex="0">Skip to main content</a>
+
+    <!-- ═══ Noscript SEO Fortress — Full crawlable fallback ═══ -->
     <noscript>
-      <h1>ResumeCopy — Free AI Resume Builder & ATS Resume Optimizer</h1>
-      <p>ResumeCopy is the #1 free AI-powered resume builder and ATS resume optimizer. Build ATS-optimized resumes that score 90+ on Applicant Tracking Systems. Powered by Claude, ChatGPT, and Gemini AI.</p>
+      <div style="max-width:800px;margin:0 auto;padding:40px 20px;font-family:system-ui,sans-serif;color:#1D1D1F;line-height:1.7;">
+        <h1>ResumeCopy — Free AI Resume Builder & ATS Resume Optimizer</h1>
+        <p><strong>ResumeCopy</strong> is the #1 free AI-powered resume builder and ATS resume optimizer trusted by <strong>2,400+ job seekers worldwide</strong>. Build ATS-optimized resumes that score <strong>90+ on Applicant Tracking Systems</strong> like Taleo, Workday, Greenhouse, Lever, and iCIMS. Powered by Claude, ChatGPT, and Gemini AI. Created by <a href="https://instagram.com/aadityahriday">Aaditya Hriday</a>.</p>
+        <p>✅ 2,400+ resumes optimized · 100% Free · No Sign-Up Required · Your Data Never Stored</p>
+
+        <h2>How It Works — 3 Simple Steps</h2>
+        <p>ResumeCopy uses a 3-step AI-powered pipeline to transform your resume into an ATS-optimized, keyword-matched PDF in under 90 seconds:</p>
+        <ol>
+          <li><strong>Paste Your Resume + Job Description</strong> — Drop in the full job description and your current resume. Our AI analyzes every keyword, requirement, and qualification.</li>
+          <li><strong>AI Rewrites & Optimizes</strong> — Claude, ChatGPT, or Gemini deeply rewrites every bullet point with matched ATS keywords, quantified achievements, and strong action verbs for a 90+ ATS score.</li>
+          <li><strong>Download ATS-Ready PDF</strong> — Your optimized resume is compiled to professional LaTeX on Overleaf and delivered as a stunning, ATS-parseable PDF ready for any application.</li>
+        </ol>
+
+        <h2>What is an ATS Resume?</h2>
+        <p>An <strong>ATS (Applicant Tracking System)</strong> is software used by <strong>99% of Fortune 500 companies</strong> and most mid-size employers to automatically screen, filter, and rank job applications before a human recruiter ever reviews them. Systems like <strong>Taleo, Workday, Greenhouse, Lever, and iCIMS</strong> scan your resume for keyword matches, proper formatting, and standard section headers. If your resume doesn't pass the ATS, it gets automatically rejected — even if you're the most qualified candidate. Studies show that <strong>75% of resumes are rejected by ATS before a human ever sees them</strong>.</p>
+
+        <h2>Why Choose ResumeCopy?</h2>
+        <ul>
+          <li><strong>AI-Powered Keyword Matching</strong> — Our AI extracts every keyword from the job description and weaves them into your resume bullets.</li>
+          <li><strong>Deterministic ATS Scoring</strong> — 100% algorithmic scoring engine, no AI randomness. Same inputs always produce the same score.</li>
+          <li><strong>Professional LaTeX PDF</strong> — Your resume is compiled to professional-grade LaTeX via Overleaf.</li>
+          <li><strong>Multi-Model AI Support</strong> — Start free with Gemini 2.5 Flash, or use GPT-4o or Claude 3.7 Sonnet.</li>
+          <li><strong>Before & After Score Comparison</strong> — See your ATS score before and after optimization with a detailed breakdown.</li>
+          <li><strong>100% Private & Secure</strong> — No sign-up required. Your data is processed in-memory and never stored.</li>
+        </ul>
+
+        <h2>ATS Score Breakdown</h2>
+        <p>ResumeCopy uses a <strong>100% deterministic, algorithmic ATS scoring engine</strong>. Your resume is scored out of 100 across 6 dimensions:</p>
+        <ul>
+          <li><strong>Keyword Match (40 pts)</strong> — JD keywords and multi-word phrases found in resume</li>
+          <li><strong>Section Headers (15 pts)</strong> — Standard ATS sections (Summary, Experience, Education, Skills)</li>
+          <li><strong>Quantified Impact (15 pts)</strong> — Lines with numbers, metrics, and impact words</li>
+          <li><strong>Action Verbs (10 pts)</strong> — Match against 35+ strong action verbs</li>
+          <li><strong>Contact Data (10 pts)</strong> — Email, phone, LinkedIn, GitHub, location</li>
+          <li><strong>Formatting (10 pts)</strong> — Bullet count, word count, date consistency</li>
+        </ul>
+
+        <h2>Professional Resume Templates</h2>
+        <p>Choose from our ATS-optimized templates: Modern Professional, Executive Classic, Tech Startup, Creative Minimal, Data Science, and Entry Level. All templates are designed to pass Applicant Tracking Systems with proper formatting and keyword placement.</p>
+
+        <h2>Frequently Asked Questions</h2>
+        <details><summary><strong>Is ResumeCopy really free?</strong></summary><p>Yes! ResumeCopy is completely free to use. You bring your own AI API key (Claude, ChatGPT, or Gemini all offer free tiers) and an Overleaf account for PDF compilation.</p></details>
+        <details><summary><strong>Do I need to create an account?</strong></summary><p>No sign-up or account is required. Your API keys are stored only in your browser's localStorage.</p></details>
+        <details><summary><strong>What AI models are supported?</strong></summary><p>Three options: Gemini 2.5 Flash by Google (FREE), GPT-4o by OpenAI, and Claude 3.7 Sonnet by Anthropic. You can switch at any time.</p></details>
+        <details><summary><strong>How long does it take?</strong></summary><p>The entire process takes approximately 60-90 seconds depending on resume length and AI model.</p></details>
+        <details><summary><strong>Is my data secure?</strong></summary><p>Absolutely. Everything is processed in-memory. Your data is never stored, logged, or shared.</p></details>
+        <details><summary><strong>What ATS systems does this work with?</strong></summary><p>Resumes optimized by ResumeCopy pass all major ATS: Taleo, Workday, Greenhouse, Lever, iCIMS, BambooHR, JazzHR, and more.</p></details>
+        <details><summary><strong>How to tailor a resume for ATS in 2026?</strong></summary><p>Use a single-column layout, standard section headers, reverse-chronological order, and naturally integrate 15-25 keywords from the job description. Use ResumeCopy to automate this process with AI.</p></details>
+
+        <h2 id="about">About ResumeCopy</h2>
+        <p><strong>ResumeCopy</strong> is a free, open-source AI-powered resume builder created by <strong>Aaditya Hriday</strong>. Our mission is to give every job seeker access to professional resume optimization tools. We leverage cutting-edge AI from Claude, ChatGPT, and Gemini to rewrite your resume with job-specific keywords, quantified achievements, and strong action verbs — targeting a 90+ ATS score. ResumeCopy is open source and available on <a href="https://github.com/aadityahriday/ats-resume-tailor">GitHub</a>.</p>
+
+        <h2 id="contact">Contact Us</h2>
+        <p>Have questions, feedback, or need support? Reach out to us:</p>
+        <ul>
+          <li><strong>Creator:</strong> <a href="https://instagram.com/aadityahriday">Aaditya Hriday (@aadityahriday)</a></li>
+          <li><strong>GitHub Issues:</strong> <a href="https://github.com/aadityahriday/ats-resume-tailor/issues">Report a bug or request a feature</a></li>
+          <li><strong>Email:</strong> support@resumecopy.com</li>
+        </ul>
+
+        <h2 id="privacy-policy">Privacy Policy</h2>
+        <p><em>Last Updated: May 2026</em></p>
+        <p>ResumeCopy does not collect, store, or transmit any personal data to our servers. All processing happens in your browser's memory. Your AI API keys are stored exclusively in your browser's localStorage and are never transmitted to ResumeCopy servers. Your resume and job description are sent directly to your chosen AI provider for processing and are never stored, logged, or shared by us. ResumeCopy does not use tracking cookies. We use Google Analytics for anonymous usage statistics only. ResumeCopy is not intended for use by children under 13.</p>
+
+        <h2 id="terms-of-service">Terms of Service</h2>
+        <p><em>Last Updated: May 2026</em></p>
+        <p>By using ResumeCopy, you agree to these terms. ResumeCopy is provided "as is" without warranties of any kind. We are not responsible for the accuracy of AI-generated content. Users are responsible for reviewing and verifying all resume content before submission to employers. ResumeCopy integrates with third-party services (Anthropic, OpenAI, Google, Overleaf) whose use is subject to their respective terms of service. We reserve the right to modify these terms at any time.</p>
+
+        <h2 id="disclaimer">Disclaimer</h2>
+        <p>ResumeCopy uses artificial intelligence to generate resume suggestions. AI-generated content may contain errors. Always review all content before submitting to employers. The ATS scores provided are estimates based on keyword matching, formatting analysis, and common ATS criteria. Different ATS systems use different algorithms, and actual screening results may vary. A high score does not guarantee employment or interviews. ResumeCopy does not provide professional career advice, legal advice, or HR consulting.</p>
+
+        <hr />
+        <p style="font-size:12px;color:#666;">© 2026 ResumeCopy. Free AI resume builder for job seekers worldwide. Created by <a href="https://instagram.com/aadityahriday">Aaditya Hriday</a>. <a href="/about">About</a> · <a href="/privacy-policy">Privacy Policy</a> · <a href="/terms-of-service">Terms of Service</a> · <a href="/contact">Contact</a> · <a href="/disclaimer">Disclaimer</a></p>
+      </div>
     </noscript>
+
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

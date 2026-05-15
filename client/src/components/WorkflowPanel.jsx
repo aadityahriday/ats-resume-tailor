@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-
+import LoadingSkeleton from './LoadingSkeleton'
 function formatTime(ms) {
   if (ms < 1000) return `${ms}ms`
   return `${(ms / 1000).toFixed(1)}s`
@@ -191,7 +191,7 @@ export default function WorkflowPanel({ steps, isGenerating, error, result, onDo
       if (Object.keys(counters).length > 0) {
         setElapsedCounters(prev => ({ ...prev, ...counters }))
       }
-    }, 50)
+    }, 100)
     return () => clearInterval(interval)
   }, [steps])
 
@@ -203,6 +203,8 @@ export default function WorkflowPanel({ steps, isGenerating, error, result, onDo
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }
   }, [steps])
+
+
 
   const allDone = steps.length > 0 && steps.every(s => s.status === 'done')
   const hasError = steps.some(s => s.status === 'error')
@@ -218,7 +220,7 @@ export default function WorkflowPanel({ steps, isGenerating, error, result, onDo
     <section className="max-w-5xl mx-auto px-6 py-8" id="workflow-panel">
       <div
         ref={panelRef}
-        className={`workflow-canvas rounded-2xl overflow-hidden transition-all duration-500 ${
+        className={`workflow-canvas bg-surface rounded-2xl overflow-hidden transition-all duration-500 ${
           hasError
             ? 'border border-error/30 shadow-[0_0_48px_rgba(244,63,94,0.08)]'
             : allDone
@@ -227,11 +229,9 @@ export default function WorkflowPanel({ steps, isGenerating, error, result, onDo
             ? 'border border-amber/20 shadow-[0_0_64px_rgba(255,159,67,0.06)]'
             : 'border border-border'
         }`}
-        style={{ background: 'linear-gradient(180deg, #12151C 0%, #0E1017 100%)' }}
       >
         {/* ─── Header Bar (terminal-style) ──────────────────── */}
-        <div className="px-5 py-3.5 border-b border-border/40 flex items-center justify-between"
-             style={{ background: 'linear-gradient(180deg, rgba(24,28,38,0.8) 0%, rgba(18,21,28,0.6) 100%)' }}>
+        <div className="px-5 py-3.5 border-b border-border/40 flex items-center justify-between bg-surface-raised/80">
           <div className="flex items-center gap-3">
             {/* Traffic lights */}
             <div className="flex items-center gap-1.5">
@@ -255,6 +255,11 @@ export default function WorkflowPanel({ steps, isGenerating, error, result, onDo
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono text-amber bg-amber/8 border border-amber/15">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber animate-blink" />
                 Running
+              </span>
+            )}
+            {!isGenerating && !hasError && !allDone && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono text-muted bg-muted/10 border border-muted/20">
+                Ready
               </span>
             )}
             {allDone && (
@@ -347,8 +352,7 @@ export default function WorkflowPanel({ steps, isGenerating, error, result, onDo
         {/* ─── Completion Banner ────────────────────────────── */}
         {allDone && result && (
           <div className="mx-5 mb-5 animate-slide-in-up">
-            <div className="rounded-xl p-5 border border-success/20"
-                 style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(16,185,129,0.02) 100%)' }}>
+            <div className="rounded-xl p-5 border border-success/20 bg-success/5">
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-success/10 border border-success/20 flex items-center justify-center shrink-0">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -406,8 +410,7 @@ export default function WorkflowPanel({ steps, isGenerating, error, result, onDo
         {/* ─── Error Banner ──────────────────────────────────── */}
         {hasError && error && (
           <div className="mx-5 mb-5 animate-slide-in-up">
-            <div className="rounded-xl p-4 border border-error/20"
-                 style={{ background: 'linear-gradient(135deg, rgba(244,63,94,0.05) 0%, transparent 100%)' }}>
+            <div className="rounded-xl p-4 border border-error/20 bg-error/5">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-lg bg-error/10 flex items-center justify-center shrink-0 mt-0.5">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F43F5E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

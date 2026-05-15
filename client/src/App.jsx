@@ -1,7 +1,12 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
+import Footer from './components/Footer'
+import CookieConsent from './components/CookieConsent'
 import Hero from './components/Hero'
 import HowItWorks from './components/HowItWorks'
+import TemplateGallery from './components/TemplateGallery'
+import Testimonials from './components/Testimonials'
 import SetupPanel from './components/SetupPanel'
 import GeneratorForm from './components/GeneratorForm'
 import WorkflowPanel from './components/WorkflowPanel'
@@ -9,12 +14,20 @@ import ScoreComparison from './components/ScoreComparison'
 import ResultCard from './components/ResultCard'
 import HistoryPanel from './components/HistoryPanel'
 import DiffModal from './components/DiffModal'
+import OnboardingTour from './components/OnboardingTour'
+import ErrorPopup from './components/ErrorPopup'
+import useKeyboardShortcuts from './hooks/useKeyboardShortcuts'
+import PrivacyPage from './pages/PrivacyPage'
+import TermsPage from './pages/TermsPage'
+import DisclaimerPage from './pages/DisclaimerPage'
+import AboutPage from './pages/AboutPage'
+import ContactPage from './pages/ContactPage'
 
 // ─── Provider Display Names ────────────────────────────────────
 const PROVIDER_LABELS = {
-  anthropic: 'Claude Opus 4',
-  openai: 'GPT-4.1',
-  gemini: 'Gemini 2.5 Pro',
+  gemini: 'Gemini 2.5 Flash',
+  openai: 'GPT-4o',
+  anthropic: 'Claude 3.7 Sonnet',
 }
 
 function App() {
@@ -28,14 +41,39 @@ function App() {
   const [showDiff, setShowDiff] = useState(false)
   const [diffData, setDiffData] = useState(null)
   const [historyRefresh, setHistoryRefresh] = useState(0)
+  const [runTour, setRunTour] = useState(false)
+
+  // ─── Close Modals on Escape Key ─────────────────────────────────
+  useEffect(() => {
+    const handleCloseAllModals = () => {
+      setShowDiff(false)
+    }
+
+    window.addEventListener('closeAllModals', handleCloseAllModals)
+    return () => window.removeEventListener('closeAllModals', handleCloseAllModals)
+  }, [])
 
   const formRef = useRef(null)
   const resultRef = useRef(null)
 
+  // Check if user has seen onboarding tour
+  useEffect(() => {
+    const hasSeenTour = localStorage.getItem('ats_onboarding_seen')
+    if (!hasSeenTour) {
+      // Delay tour start to let page load
+      setTimeout(() => setRunTour(true), 1500)
+    }
+  }, [])
+
+  const handleTourClose = () => {
+    setRunTour(false)
+    localStorage.setItem('ats_onboarding_seen', 'true')
+  }
+
   // ─── API Key helpers ─────────────────────────────────────────
   const getStoredKey = (key) => localStorage.getItem(key) || ''
 
-  const getActiveProvider = () => localStorage.getItem('ats_ai_provider') || 'anthropic'
+  const getActiveProvider = () => localStorage.getItem('ats_ai_provider') || 'gemini'
 
   const getActiveProviderKey = () => {
     const provider = getActiveProvider()
@@ -76,6 +114,15 @@ function App() {
     { id: 11, name: 'Render Resume PDF', desc: 'Downloading compiled PDF binary…', icon: 'http' },
   ]
 
+  // Initialize workflow steps so they are visible from the start
+  useEffect(() => {
+    if (workflowSteps.length === 0 && !isGenerating && !result) {
+      setWorkflowSteps(STEPS.map(s => ({ ...s, status: 'pending', elapsed: 0, startTime: null })))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+
   const simulateWorkflow = useCallback(async (timings, abortSignal) => {
     const steps = STEPS.map(s => ({ ...s, status: 'pending', elapsed: 0, startTime: null }))
     setWorkflowSteps([...steps])
@@ -96,33 +143,75 @@ function App() {
       10: timings?.overleaf ? Math.round(timings.overleaf * 0.2) : 3000,  // Download PDF
     }
 
+    let apiFinished = false
+
     for (let i = 0; i < steps.length; i++) {
-      // Check if we should abort (API already finished)
+      // Check if we should abort immediately for error
       if (abortSignal?.aborted) {
-        // Fast-forward remaining steps
-        for (let j = i; j < steps.length; j++) {
-          steps[j].status = 'done'
-          steps[j].elapsed = stepTimingMap[j]
+        if (abortSignal.reason === 'error') {
+          steps[i].status = 'error'
+          for (let j = i + 1; j < steps.length; j++) steps[j].status = 'pending'
+          setWorkflowSteps([...steps])
+          break
+        } else {
+          apiFinished = true
         }
-        setWorkflowSteps([...steps])
-        break
       }
 
       steps[i].status = 'running'
       steps[i].startTime = Date.now()
       setWorkflowSteps([...steps])
 
-      const duration = stepTimingMap[i]
+      // Minimum 2s + 0-1.5s jitter to look realistic and not fixed
+      const baseJitter = 2000 + Math.random() * 1500
+      const expectedDuration = stepTimingMap[i] || 0
 
-      // Live elapsed counter — update every 100ms
+      // Live elapsed counter
       const interval = setInterval(() => {
         steps[i].elapsed = Date.now() - steps[i].startTime
         setWorkflowSteps([...steps])
       }, 100)
 
-      // Wait the full realistic duration (no cap!)
-      await new Promise(r => setTimeout(r, duration))
+      // Wait loop: checks every 100ms if target duration is met.
+      // If API finishes mid-step, the target drops to just the minimum baseJitter!
+      const wasError = await new Promise(resolve => {
+        let timeoutId;
+        
+        const checkDone = () => {
+          const elapsed = Date.now() - steps[i].startTime
+          const currentTarget = apiFinished ? baseJitter : Math.max(baseJitter, expectedDuration)
+          
+          if (elapsed >= currentTarget) {
+            resolve(false)
+          } else {
+            timeoutId = setTimeout(checkDone, 100)
+          }
+        }
+        
+        checkDone()
+
+        if (abortSignal && !abortSignal.aborted) {
+          abortSignal.addEventListener('abort', () => {
+            if (abortSignal.reason === 'error') {
+              clearTimeout(timeoutId)
+              resolve(true)
+            } else {
+              apiFinished = true
+            }
+          }, { once: true })
+        }
+      })
+
       clearInterval(interval)
+
+      if (wasError) {
+        steps[i].status = 'error'
+        for (let j = i + 1; j < steps.length; j++) {
+          steps[j].status = 'pending'
+        }
+        setWorkflowSteps([...steps])
+        break
+      }
 
       steps[i].status = 'done'
       steps[i].elapsed = Date.now() - steps[i].startTime
@@ -146,6 +235,14 @@ function App() {
     setError(null)
     setWorkflowSteps(STEPS.map(s => ({ ...s, status: 'pending', elapsed: 0 })))
 
+    // Scroll to workflow immediately upon clicking Generate
+    setTimeout(() => {
+      document.getElementById('workflow-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 100)
+
+    let animPromise = null
+    const abortController = new AbortController()
+
     try {
       const activeProvider = getActiveProvider()
 
@@ -157,47 +254,39 @@ function App() {
         openaiKey: getStoredKey('ats_openai_key'),
         geminiKey: getStoredKey('ats_gemini_key'),
         overleafSession: getStoredKey('ats_overleaf_session'),
-        overleafGclb: getStoredKey('ats_gclb_token'),
       }
 
-      // Create abort controller to signal animation when API is done
-      const abortController = new AbortController()
+      const timeoutSignal = AbortSignal.timeout(120000)
+      const combinedSignal = abortController.signal ? 
+        AbortSignal.any([abortController.signal, timeoutSignal]) : 
+        timeoutSignal
 
       // Start both: API call + workflow animation
       const workflowPromise = fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
+        signal: combinedSignal
       })
 
       // Start the visual workflow simulation (runs independently)
-      const animPromise = simulateWorkflow(null, abortController.signal)
+      animPromise = simulateWorkflow(null, abortController.signal)
 
       // Wait for API to finish
       const response = await workflowPromise
       const data = await response.json()
 
-      // Signal animation to fast-forward remaining steps
-      abortController.abort()
-
-      // Give animation a moment to fast-forward
-      await new Promise(r => setTimeout(r, 800))
-
       if (data.status === 'error') {
-        // Mark last running/pending step as error
-        setWorkflowSteps(prev => {
-          const steps = [...prev]
-          const errorIdx = steps.findIndex(s => s.status === 'running' || s.status === 'pending')
-          if (errorIdx >= 0) steps[errorIdx].status = 'error'
-          // Mark remaining as pending
-          for (let i = errorIdx + 1; i < steps.length; i++) {
-            if (steps[i].status !== 'done') steps[i].status = 'pending'
-          }
-          return steps
-        })
+        // Send error interrupt to animation
+        abortController.abort('error')
+        await animPromise
         setError(data.message)
         return
       }
+
+      // Send success interrupt to safely fast-forward animation
+      abortController.abort('success')
+      await animPromise
 
       // Update workflow with real timings from server
       if (data.timings) {
@@ -235,13 +324,12 @@ function App() {
       }, 300)
 
     } catch (err) {
+      abortController.abort('error')
+      // Wait for animation to visually reflect the error state
+      if (animPromise) {
+        try { await animPromise } catch(e) {}
+      }
       setError(err.message || 'Network error — please check your connection and try again.')
-      setWorkflowSteps(prev => {
-        const steps = [...prev]
-        const runningIdx = steps.findIndex(s => s.status === 'running' || s.status === 'pending')
-        if (runningIdx >= 0) steps[runningIdx].status = 'error'
-        return steps
-      })
     } finally {
       setIsGenerating(false)
     }
@@ -285,6 +373,18 @@ function App() {
     formRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  // ─── Render Variables ─────────────────────────────────────────────
+  const hasKeys = isActiveKeyValid() && getStoredKey('ats_overleaf_session')
+  const canGenerate = jobDescription.trim() && currentResume.trim() && hasKeys
+
+  // ─── Keyboard Shortcuts ─────────────────────────────────────────
+  useKeyboardShortcuts({
+    onGenerate: () => canGenerate && handleGenerate(),
+    onScrollToForm: handleScrollToForm,
+    canGenerate,
+    isGenerating
+  })
+
   // ─── PDF Download Handler ─────────────────────────────────────
   const handleDownloadPdf = () => {
     if (!result?.pdfBase64) return
@@ -306,120 +406,106 @@ function App() {
   }
 
   // ─── Render ──────────────────────────────────────────────────
-  const hasKeys = isActiveKeyValid() && getStoredKey('ats_overleaf_session')
-  const canGenerate = jobDescription.trim() && currentResume.trim() && hasKeys
-
   return (
     <div className="min-h-screen bg-bg">
-      <Navbar
-        onGenerate={() => canGenerate && handleGenerate()}
-        canGenerate={canGenerate}
-        isGenerating={isGenerating}
-      />
-
-      <Hero onScrollToForm={handleScrollToForm} />
-      <HowItWorks />
-      <SetupPanel />
-
-      <div ref={formRef}>
-        <GeneratorForm
-          jobDescription={jobDescription}
-          currentResume={currentResume}
-          onJDChange={setJobDescription}
-          onResumeChange={setCurrentResume}
-          onGenerate={() => handleGenerate()}
+      <header role="banner">
+        <Navbar
+          onGenerate={() => canGenerate && handleGenerate()}
           canGenerate={canGenerate}
           isGenerating={isGenerating}
-          hasKeys={hasKeys}
-          activeProvider={getActiveProvider()}
         />
-      </div>
+      </header>
 
-      {(isGenerating || workflowSteps.length > 0) && (
-        <WorkflowPanel
-          steps={workflowSteps}
-          isGenerating={isGenerating}
-          error={error}
-          result={result}
-          onDownloadPdf={handleDownloadPdf}
-        />
-      )}
+      <Routes>
+        <Route path="/" element={
+          <main id="main-content" role="main">
+            <Hero onScrollToForm={handleScrollToForm} />
+            <HowItWorks />
+            <TemplateGallery />
+            <Testimonials />
+            <SetupPanel />
 
-      {/* Retry button below workflow on error */}
-      {error && !isGenerating && (
-        <div className="max-w-5xl mx-auto px-6 -mt-4 mb-4">
-          <div className="flex justify-center">
-            <button
-              onClick={() => handleGenerate()}
-              className="px-8 py-3 bg-error/10 border border-error/25 text-error font-mono text-sm rounded-xl 
-                         hover:bg-error/20 transition-all cursor-pointer flex items-center gap-2
-                         shadow-[0_2px_16px_rgba(244,63,94,0.1)]"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="23 4 23 10 17 10"/>
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-              </svg>
-              Try Again
-            </button>
-          </div>
-        </div>
-      )}
+            <div ref={formRef}>
+              <GeneratorForm
+                jobDescription={jobDescription}
+                currentResume={currentResume}
+                onJDChange={setJobDescription}
+                onResumeChange={setCurrentResume}
+                onGenerate={() => handleGenerate()}
+                canGenerate={canGenerate}
+                isGenerating={isGenerating}
+                hasKeys={hasKeys}
+                activeProvider={getActiveProvider()}
+              />
+            </div>
 
-      <div ref={resultRef}>
-        {result && (
-          <>
-            <ScoreComparison
-              beforeScore={result.beforeScore}
-              afterScore={result.afterScore}
+            {(isGenerating || workflowSteps.length > 0) && (
+              <WorkflowPanel
+                steps={workflowSteps}
+                isGenerating={isGenerating}
+                error={error}
+                result={result}
+                onDownloadPdf={handleDownloadPdf}
+              />
+            )}
+
+            {error && !isGenerating && (
+              <div className="max-w-5xl mx-auto px-6 -mt-4 mb-4">
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => handleGenerate()}
+                    className="px-8 py-3 bg-error/10 border border-error/25 text-error font-mono text-sm rounded-xl 
+                               hover:bg-error/20 transition-all cursor-pointer flex items-center gap-2
+                               shadow-[0_2px_16px_rgba(244,63,94,0.1)]"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="23 4 23 10 17 10"/>
+                      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    </svg>
+                    Try Again
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div ref={resultRef}>
+              {result && (
+                <>
+                  <ScoreComparison
+                    beforeScore={result.beforeScore}
+                    afterScore={result.afterScore}
+                  />
+                  <ResultCard
+                    result={result}
+                    onShowHistory={() => {
+                      document.getElementById('history-panel')?.scrollIntoView({ behavior: 'smooth' })
+                    }}
+                  />
+                </>
+              )}
+            </div>
+
+            <HistoryPanel
+              refreshTrigger={historyRefresh}
+              onRerun={handleRerun}
+              onShowDiff={handleShowDiff}
             />
-            <ResultCard
-              result={result}
-              onShowHistory={() => {
-                document.getElementById('history-panel')?.scrollIntoView({ behavior: 'smooth' })
-              }}
-            />
-          </>
-        )}
-      </div>
+          </main>
+        } />
 
-      <HistoryPanel
-        refreshTrigger={historyRefresh}
-        onRerun={handleRerun}
-        onShowDiff={handleShowDiff}
-      />
+        {/* ═══ Policy & Info Pages (Real Routes for AdSense) ═══ */}
+        <Route path="/privacy-policy" element={<PrivacyPage />} />
+        <Route path="/terms-of-service" element={<TermsPage />} />
+        <Route path="/disclaimer" element={<DisclaimerPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
 
-      {/* Footer */}
-      <footer className="text-center py-10 border-t border-border/40 mt-20">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber/50" />
-            <span className="font-serif text-sm text-text/60">ResumeCopy</span>
-          </div>
-          <p className="font-mono text-muted/60 text-[11px] mb-3">
-            Free AI Resume Builder & ATS Resume Optimizer · Powered by Claude · ChatGPT · Gemini
-          </p>
-          <p className="text-muted/40 text-[11px] mb-4 max-w-lg mx-auto leading-relaxed">
-            ResumeCopy helps job seekers build ATS-optimized resumes that pass Applicant Tracking Systems like Taleo, Workday, Greenhouse, and Lever.
-            Your resume and job description are processed in-memory and never stored on any server.
-          </p>
-          <div className="flex items-center justify-center gap-4 text-[10px] font-mono text-muted/40 mb-3">
-            <a href="#what-is-ats" className="hover:text-amber transition-colors">What is ATS?</a>
-            <span>·</span>
-            <a href="#how-it-works" className="hover:text-amber transition-colors">How It Works</a>
-            <span>·</span>
-            <a href="#why-resumecopy" className="hover:text-amber transition-colors">Features</a>
-            <span>·</span>
-            <a href="#ats-scoring" className="hover:text-amber transition-colors">ATS Scoring</a>
-            <span>·</span>
-            <a href="#faq" className="hover:text-amber transition-colors">FAQ</a>
-            <span>·</span>
-            <a href="#setup-panel" className="hover:text-amber transition-colors">Setup</a>
-          </div>
-          <p className="text-muted/30 text-[10px]">
-            © {new Date().getFullYear()} ResumeCopy. Free AI resume builder for job seekers worldwide.
-          </p>
-        </div>
-      </footer>
+      <Footer />
+
+      {/* Global Overlays */}
+      <ErrorPopup error={error} onClose={() => setError(null)} />
 
       {showDiff && diffData && (
         <DiffModal
@@ -429,6 +515,9 @@ function App() {
           onClose={() => setShowDiff(false)}
         />
       )}
+
+      <OnboardingTour run={runTour} onClose={handleTourClose} />
+      <CookieConsent />
     </div>
   )
 }

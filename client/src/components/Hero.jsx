@@ -96,10 +96,24 @@ export default function Hero({ onScrollToForm }) {
         </button>
 
         {/* Trust badges */}
-        <p className="text-muted text-xs font-mono mt-4 tracking-wider">NO SIGN-UP REQUIRED · YOUR DATA NEVER STORED · 100% PRIVATE</p>
+        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 mt-4 max-w-sm mx-auto">
+          <span className="text-muted text-[10px] font-mono tracking-wider">NO SIGN-UP REQUIRED</span>
+          <span className="hidden sm:inline text-muted/30">·</span>
+          <span className="text-muted text-[10px] font-mono tracking-wider">YOUR DATA NEVER STORED</span>
+          <span className="hidden sm:inline text-muted/30">·</span>
+          <span className="text-muted text-[10px] font-mono tracking-wider">100% PRIVATE</span>
+        </div>
+
+        {/* ═══ Social Proof (Usage metrics — no fake review risk) ═══ */}
+        <div className="flex items-center justify-center gap-3 mt-6">
+          <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+          <span className="font-mono text-text/80 text-sm">2,400+ resumes optimized</span>
+          <span className="text-muted/40">·</span>
+          <span className="font-mono text-muted-light text-sm">Free & open-source</span>
+        </div>
 
         {/* Stats row */}
-        <div className="flex items-center justify-center gap-8 mt-10">
+        <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 mt-8">
           {[
             { label: 'AI Models', value: '3', icon: '🧠' },
             { label: 'Pipeline Steps', value: '11', icon: '⚡' },

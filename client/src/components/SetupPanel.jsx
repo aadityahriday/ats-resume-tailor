@@ -2,20 +2,22 @@ import { useState, useEffect } from 'react'
 
 const AI_PROVIDERS = [
   {
-    id: 'anthropic',
-    name: 'Claude',
-    company: 'Anthropic',
-    icon: '🟠',
-    color: 'amber',
-    keyPrefix: 'sk-ant-',
-    placeholder: 'sk-ant-api03-...',
-    storageKey: 'ats_anthropic_key',
-    helpUrl: 'https://console.anthropic.com',
-    helpText: 'console.anthropic.com',
-    steps: 'Sign up free → Click "API Keys" → "Create Key" → Copy it',
-    model: 'Claude Opus 4',
-    badge: 'Deep Thinking',
-    badgeColor: 'bg-amber/15 text-amber border-amber/30',
+    id: 'gemini',
+    name: 'Gemini',
+    company: 'Google',
+    icon: '�',
+    color: 'blue',
+    keyPrefix: '',
+    placeholder: 'AIzaSy...',
+    storageKey: 'ats_gemini_key',
+    helpUrl: 'https://aistudio.google.com/apikey',
+    helpText: 'aistudio.google.com',
+    steps: 'Sign in with Google → Click "Get API key" → "Create API key" → Copy it. No credit card needed.',
+    model: 'Gemini 2.5 Flash',
+    badge: 'FREE — Recommended',
+    badgeColor: 'bg-success/15 text-success border-success/30',
+    tier: 'free',
+    tierNote: 'No billing required. 250 generations/day free.',
   },
   {
     id: 'openai',
@@ -28,63 +30,67 @@ const AI_PROVIDERS = [
     storageKey: 'ats_openai_key',
     helpUrl: 'https://platform.openai.com/api-keys',
     helpText: 'platform.openai.com',
-    steps: 'Sign up → Click "API Keys" → "Create new secret key" → Copy it',
-    model: 'GPT-4.1',
-    badge: 'Latest Flagship',
-    badgeColor: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+    steps: 'Sign up → Add billing (min 5) → Click "API Keys" → "Create new secret key" → Copy it',
+    model: 'GPT-4o',
+    badge: 'Paid — Pay-as-you-go',
+    badgeColor: 'bg-amber/15 text-amber border-amber/30',
+    tier: 'paid',
+    tierNote: 'Requires OpenAI billing. ~$0.05 per resume.',
   },
   {
-    id: 'gemini',
-    name: 'Gemini',
-    company: 'Google',
-    icon: '🔵',
-    color: 'blue',
-    keyPrefix: '',
-    placeholder: 'AIzaSy...',
-    storageKey: 'ats_gemini_key',
-    helpUrl: 'https://aistudio.google.com/apikey',
-    helpText: 'aistudio.google.com',
-    steps: 'Sign in → Click "Get API Key" → "Create API Key" → Copy it',
-    model: 'Gemini 2.5 Pro',
-    badge: 'Deep Thinking',
-    badgeColor: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+    id: 'anthropic',
+    name: 'Claude',
+    company: 'Anthropic',
+    icon: '�',
+    color: 'purple',
+    keyPrefix: 'sk-ant-',
+    placeholder: 'sk-ant-api03-...',
+    storageKey: 'ats_anthropic_key',
+    helpUrl: 'https://console.anthropic.com',
+    helpText: 'console.anthropic.com',
+    steps: 'Sign up → Add billing (min 5) → Click "API Keys" → "Create Key" → Copy it',
+    model: 'Claude 3.7 Sonnet',
+    badge: 'Premium — Best Quality',
+    badgeColor: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+    tier: 'premium',
+    tierNote: 'Requires Anthropic billing. Highest reasoning quality.',
   },
 ]
 
 export default function SetupPanel() {
   const [isOpen, setIsOpen] = useState(false)
-  const [activeProvider, setActiveProvider] = useState('anthropic')
+  const [userClosed, setUserClosed] = useState(false)
+  const [activeProvider, setActiveProvider] = useState('gemini')
   const [apiKeys, setApiKeys] = useState({
     anthropic: '',
     openai: '',
     gemini: '',
   })
   const [overleafSession, setOverleafSession] = useState('')
-  const [gclbToken, setGclbToken] = useState('')
   const [showKey, setShowKey] = useState(false)
   const [showCookieGuide, setShowCookieGuide] = useState(false)
 
   useEffect(() => {
-    const storedProvider = localStorage.getItem('ats_ai_provider') || 'anthropic'
-    const storedKeys = {
-      anthropic: localStorage.getItem('ats_anthropic_key') || '',
-      openai: localStorage.getItem('ats_openai_key') || '',
-      gemini: localStorage.getItem('ats_gemini_key') || '',
-    }
-    const storedSession = localStorage.getItem('ats_overleaf_session') || ''
-    const storedGclb = localStorage.getItem('ats_gclb_token') || ''
+    if (!userClosed) {
+      const storedProvider = localStorage.getItem('ats_ai_provider') || 'gemini'
+      const storedKeys = {
+        anthropic: localStorage.getItem('ats_anthropic_key') || '',
+        openai: localStorage.getItem('ats_openai_key') || '',
+        gemini: localStorage.getItem('ats_gemini_key') || '',
+      }
+      const storedSession = localStorage.getItem('ats_overleaf_session') || ''
 
-    setActiveProvider(storedProvider)
-    setApiKeys(storedKeys)
-    setOverleafSession(storedSession)
-    setGclbToken(storedGclb)
+      setActiveProvider(storedProvider)
+      setApiKeys(storedKeys)
+      setOverleafSession(storedSession)
 
-    // Auto-open if no key configured for any provider or no session
-    const hasAnyKey = Object.values(storedKeys).some(k => k.length > 5)
-    if (!hasAnyKey || !storedSession) {
-      setIsOpen(true)
+      // Auto-open if no key configured for any provider or no session
+      const hasAnyKey = Object.values(storedKeys).some(k => k.length > 5)
+      if (!hasAnyKey || !storedSession) {
+        setIsOpen(true)
+      }
     }
-  }, [])
+  }, [userClosed])
 
   const handleProviderChange = (providerId) => {
     setActiveProvider(providerId)
@@ -128,7 +134,7 @@ export default function SetupPanel() {
     <section className="max-w-4xl mx-auto px-6 py-8" id="setup-panel">
       {/* Toggle header */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => { setIsOpen(!isOpen); if (isOpen) setUserClosed(false) }}
         className="w-full flex items-center justify-between py-4 px-6 bg-surface border border-border rounded-2xl hover:border-amber/30 transition-colors group cursor-pointer"
       >
         <div className="flex items-center gap-3">
@@ -152,10 +158,12 @@ export default function SetupPanel() {
 
       {/* Collapsible content */}
       {isOpen && (
-        <div className="mt-3 bg-surface border border-border rounded-2xl p-8 animate-slide-in-up"
-             style={{ background: 'linear-gradient(180deg, rgba(24,28,38,0.5) 0%, rgba(18,21,28,0.8) 100%)' }}>
+        <div className="mt-3 bg-surface border border-border rounded-2xl p-8 animate-slide-in-up">
           <h3 className="font-serif text-2xl text-text mb-2">Connect Your AI — Takes 30 Seconds</h3>
-          <p className="text-muted text-sm mb-8">Choose your preferred AI model. You can switch between them at any time.</p>
+          <p className="text-muted text-sm mb-8">
+            Start with <span className="text-success font-semibold">Gemini (free, no credit card)</span> —
+            it's the easiest. Upgrade to ChatGPT or Claude later for more advanced options.
+          </p>
 
           {/* ═══ Step 1: AI Provider Selector ═══ */}
           <div className="mb-8">
@@ -209,6 +217,13 @@ export default function SetupPanel() {
                       {provider.badge}
                     </span>
 
+                    {/* Tier note */}
+                    {provider.tierNote && (
+                      <span className="mt-2 text-[10px] text-muted text-center leading-tight">
+                        {provider.tierNote}
+                      </span>
+                    )}
+
                     {/* Key Status */}
                     {hasValidKey && (
                       <span className="mt-2 text-success text-xs">✓ Key Set</span>
@@ -257,7 +272,7 @@ export default function SetupPanel() {
               </button>
             </div>
             <p className="text-muted text-xs mt-2 flex items-center gap-1">
-              🔒 Stored only in your browser's localStorage. Never transmitted to any server except {activeProviderConfig.company} directly.
+              🔒 Stored only in your browser's localStorage. Transmitted securely to backend server for AI processing.
             </p>
           </div>
 
@@ -300,31 +315,6 @@ export default function SetupPanel() {
             />
           </div>
 
-          {/* ═══ Step 4: GCLB Token (Optional) ═══ */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-6 h-6 flex items-center justify-center bg-amber/10 text-amber font-mono text-xs rounded font-bold">4</span>
-              <h4 className="font-mono text-text font-medium text-sm">GCLB Token <span className="text-muted font-normal">(optional)</span></h4>
-            </div>
-
-            <div className="bg-bg/50 border border-border rounded p-4 mb-3">
-              <p className="text-muted text-xs leading-relaxed">
-                Same process as above but copy the value of the <strong className="text-text">GCLB</strong> cookie. 
-                <strong className="text-amber"> Usually not required</strong> — only add this if you get session errors without it.
-              </p>
-            </div>
-
-            <input
-              id="gclb-input"
-              type="password"
-              value={gclbToken}
-              onChange={(e) => handleSaveKey('ats_gclb_token', e.target.value, setGclbToken)}
-              placeholder="GCLB cookie value (optional)…"
-              className="w-full bg-bg border border-border rounded px-4 py-3 font-mono text-sm text-text 
-                         placeholder-muted/50 focus:border-amber focus:ring-1 focus:ring-amber focus:outline-none transition-colors"
-            />
-          </div>
-
           {/* Status summary */}
           <div className="border-t border-border pt-4 mt-6">
             <div className="flex items-center justify-between">
@@ -351,70 +341,86 @@ export default function SetupPanel() {
         <div
           className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"
           onClick={() => setShowCookieGuide(false)}
+          role="dialog"
+          aria-modal="true"
         >
           <div
-            className="bg-surface border border-border rounded p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto animate-slide-in-up"
+            className="bg-surface border border-border rounded p-8 max-w-2xl w-full max-h-[85vh] overflow-y-auto animate-slide-in-up"
             onClick={(e) => e.stopPropagation()}
+            role="document"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-serif text-xl text-text">How to Get Your Overleaf Cookies</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-serif text-xl text-text">How to Get Your Overleaf Cookie</h3>
               <button onClick={() => setShowCookieGuide(false)} className="text-muted hover:text-text text-xl cursor-pointer">×</button>
             </div>
 
-            <div className="space-y-6 text-sm text-muted-light">
+            {/* Why Section */}
+            <div className="bg-success/5 border border-success/20 rounded p-4 mb-6">
+              <p className="text-success text-xs font-mono font-semibold mb-1">Why do you need this?</p>
+              <p className="text-muted-light text-xs leading-relaxed">
+                Overleaf is a free LaTeX editor. We use your free account to compile your resume into a beautiful PDF.
+                The session cookie just lets us push your resume into your account — we never see your password.
+                <br />
+                <strong className="text-text">Cost: Free.</strong> No credit card needed for Overleaf either.
+              </p>
+            </div>
+
+            <div className="space-y-5 text-sm text-muted-light">
               <div className="flex gap-4">
                 <span className="shrink-0 w-8 h-8 flex items-center justify-center bg-amber/10 text-amber font-mono font-bold rounded">1</span>
                 <div>
-                  <p className="text-text font-medium mb-1">Open Overleaf and Log In</p>
-                  <p>Go to <a href="https://www.overleaf.com" target="_blank" className="text-amber hover:underline">overleaf.com</a> and make sure you're logged into your account.</p>
+                  <p className="text-text font-medium mb-1">Sign up (or log in) to Overleaf — it's free</p>
+                  <p>Go to <a href="https://www.overleaf.com" target="_blank" rel="noopener noreferrer" className="text-amber hover:underline">overleaf.com</a> and create an account using just your email + password. <strong className="text-text">No credit card required.</strong></p>
                 </div>
               </div>
 
               <div className="flex gap-4">
                 <span className="shrink-0 w-8 h-8 flex items-center justify-center bg-amber/10 text-amber font-mono font-bold rounded">2</span>
                 <div>
-                  <p className="text-text font-medium mb-1">Open DevTools</p>
-                  <p>Press <kbd className="px-1.5 py-0.5 bg-border rounded text-text">F12</kbd> on your keyboard (or right-click anywhere → "Inspect")</p>
+                  <p className="text-text font-medium mb-1">Open the developer panel</p>
+                  <p>While on overleaf.com, press <kbd className="px-1.5 py-0.5 bg-border rounded text-text">F12</kbd> on your keyboard.
+                  <br /><span className="text-muted text-xs">Mac users: <kbd className="px-1.5 py-0.5 bg-border rounded text-text">⌘</kbd> + <kbd className="px-1.5 py-0.5 bg-border rounded text-text">⌥</kbd> + <kbd className="px-1.5 py-0.5 bg-border rounded text-text">I</kbd></span>
+                  <br />A panel will open at the side or bottom of your browser.</p>
                 </div>
               </div>
 
               <div className="flex gap-4">
                 <span className="shrink-0 w-8 h-8 flex items-center justify-center bg-amber/10 text-amber font-mono font-bold rounded">3</span>
                 <div>
-                  <p className="text-text font-medium mb-1">Go to Application Tab</p>
-                  <p>In the DevTools panel, click the <strong className="text-text">Application</strong> tab at the top. (On Firefox, it's called "Storage")</p>
+                  <p className="text-text font-medium mb-1">Click the &quot;Application&quot; tab</p>
+                  <p>At the top of that new panel, click <strong className="text-text">Application</strong>.
+                  <br /><span className="text-muted text-xs">Don&apos;t see it? Click the <kbd className="px-1 py-0.5 bg-border rounded text-text">&raquo;</kbd> arrow at the top to find it. On Firefox it&apos;s called <strong className="text-text">Storage</strong>.</span></p>
                 </div>
               </div>
 
               <div className="flex gap-4">
                 <span className="shrink-0 w-8 h-8 flex items-center justify-center bg-amber/10 text-amber font-mono font-bold rounded">4</span>
                 <div>
-                  <p className="text-text font-medium mb-1">Find Your Cookies</p>
-                  <p>In the left sidebar, expand <strong className="text-text">Cookies</strong> → click on <strong className="text-text">https://www.overleaf.com</strong></p>
+                  <p className="text-text font-medium mb-1">Open the Cookies list</p>
+                  <p>On the LEFT sidebar of that panel, find <strong className="text-text">Cookies</strong> and click the small <strong className="text-text">▶</strong> arrow next to it. Then click <strong className="text-text">https://www.overleaf.com</strong>.</p>
                 </div>
               </div>
 
               <div className="flex gap-4">
                 <span className="shrink-0 w-8 h-8 flex items-center justify-center bg-amber/10 text-amber font-mono font-bold rounded">5</span>
                 <div>
-                  <p className="text-text font-medium mb-1">Copy overleaf_session2</p>
-                  <p>Find the cookie named <strong className="text-amber">overleaf_session2</strong>. Click on it and copy the entire <strong className="text-text">Value</strong> field. Paste it into the "Overleaf Session Cookie" input above.</p>
+                  <p className="text-text font-medium mb-1">Copy the <code className="px-1 py-0.5 bg-border rounded text-amber text-xs">overleaf_session2</code> value</p>
+                  <p>A table appears in the middle. Look down the <strong className="text-text">Name</strong> column for <strong className="text-amber">overleaf_session2</strong>. Click that row.</p>
+                  <p className="mt-1">Then look at the <strong className="text-text">Value</strong> column — double-click the long string and press <kbd className="px-1.5 py-0.5 bg-border rounded text-text">Ctrl+C</kbd> (Mac: <kbd className="px-1.5 py-0.5 bg-border rounded text-text">⌘+C</kbd>) to copy it.</p>
+                  <p className="mt-1">Paste it back into the <strong className="text-text">Overleaf Session Cookie</strong> field above.</p>
                 </div>
               </div>
+            </div>
 
-              <div className="flex gap-4">
-                <span className="shrink-0 w-8 h-8 flex items-center justify-center bg-amber/10 text-amber font-mono font-bold rounded">6</span>
-                <div>
-                  <p className="text-text font-medium mb-1">Copy GCLB (Optional)</p>
-                  <p>If you see a cookie named <strong className="text-amber">GCLB</strong>, copy its value too. This is usually optional.</p>
-                </div>
-              </div>
-
-              <div className="bg-amber/5 border border-amber/20 rounded p-4 mt-4">
-                <p className="text-amber text-xs font-mono">
-                  ⚠ Note: These cookies expire periodically. If you get "session expired" errors, repeat these steps to get fresh cookie values.
-                </p>
-              </div>
+            {/* Troubleshooting */}
+            <div className="mt-6 bg-bg/50 border border-border rounded p-4">
+              <p className="text-text text-xs font-mono font-semibold mb-2">Common issues</p>
+              <ul className="text-muted text-xs leading-relaxed space-y-1.5">
+                <li><strong className="text-text">&quot;I see <code className="px-1 bg-border rounded">overleaf.session</code> but no <code className="px-1 bg-border rounded">_session2</code>&quot;</strong> — use whichever cookie name starts with <code className="px-1 bg-border rounded">overleaf_session</code>.</li>
+                <li><strong className="text-text">&quot;Session expired&quot; on generate</strong> — cookies last about 30 days. Repeat these 5 steps for a fresh value.</li>
+                <li><strong className="text-text">&quot;Is this safe?&quot;</strong> — the cookie only authorizes us to create projects in your free Overleaf account. We can&apos;t access your password. Revoke any time by logging out of overleaf.com.</li>
+                <li><strong className="text-text">&quot;The Value field looks short&quot;</strong> — you probably copied the wrong cookie. The real one is a long Base64 string ~100+ characters.</li>
+              </ul>
             </div>
           </div>
         </div>

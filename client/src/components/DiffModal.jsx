@@ -14,7 +14,7 @@ export default function DiffModal({ original, tailored, jdPreview, onClose }) {
     document.body.style.overflow = 'hidden'
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
-      document.body.style.overflow = ''
+      document.body.style.overflow = '' // Always reset
     }
   }, [handleKeyDown])
 

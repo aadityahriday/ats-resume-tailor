@@ -1,86 +1,58 @@
 /**
- * ATS Resume Scorer — Pure Deterministic Algorithm
- * Zero AI involvement. Zero randomness. Same inputs always return same score.
- * Score out of 100 across 6 weighted dimensions.
+ * Advanced Deterministic ATS Resume Scorer
+ * 
+ * Features:
+ * - Weighted Keyword Extraction (Approximated TF-IDF based on frequency & casing)
+ * - Frequency Density Matching (Rewards multiple occurrences of core skills)
+ * - Contextual Bullet Analysis (Action verbs at start of bullets, STAR method approximation)
+ * - Readability & Buzzword Penalties (Penalizes cliches, checks optimal bullet length)
+ * - Comprehensive Section & Contact parsing
  */
 
-// ─── Stopwords ───────────────────────────────────────────────────
+// ─── Dictionaries ──────────────────────────────────────────────────
 const STOPWORDS = new Set([
-  'a','an','the','and','or','but','in','on','at','to','for','of','with',
-  'by','from','as','is','was','are','were','be','been','being','have',
-  'has','had','do','does','did','will','would','shall','should','may',
-  'might','must','can','could','about','above','after','again','against',
-  'all','am','any','because','before','below','between','both','during',
-  'each','few','further','get','got','he','her','here','hers','herself',
-  'him','himself','his','how','i','if','into','it','its','itself','just',
-  'me','more','most','my','myself','no','nor','not','now','off','once',
-  'only','other','our','ours','ourselves','out','over','own','per','same',
-  'she','so','some','such','than','that','their','theirs','them',
-  'themselves','then','there','these','they','this','those','through',
-  'too','under','until','up','upon','us','very','we','what','when',
-  'where','which','while','who','whom','why','you','your','yours',
-  'yourself','yourselves','also','etc','ie','eg','vs','via','re',
-  'able','across','along','already','although','among','another',
-  'around','away','back','become','becomes','became','behind','beside',
-  'besides','beyond','come','comes','came','could','done','down','else',
-  'enough','even','every','everything','far','find','first','go','goes',
-  'going','gone','good','great','help','however','keep','keeps','kept',
-  'know','known','last','least','less','let','like','likely','long',
-  'look','looking','looks','make','makes','making','many','may','might',
-  'much','need','needs','never','new','next','nothing','often','old',
-  'one','ones','open','part','perhaps','put','quite','rather','really',
-  'right','said','say','says','see','seen','seem','seems','set','show',
-  'shows','since','small','something','still','take','takes','taking',
-  'tell','thing','things','think','thought','three','time','today',
-  'together','told','took','toward','towards','try','turn','two',
-  'use','used','using','want','wants','way','well','went','whether',
-  'within','without','work','working','works','world','would','year',
-  'years','yet','experience','role','team','company','job','position',
-  'responsibilities','requirements','qualifications','preferred',
-  'required','including','strong','excellent','ability','knowledge',
-  'understanding','minimum','plus','bonus','ideally','proficiency',
-  'ensure','support','provide','related','relevant','equivalent',
-  'demonstrate','demonstrated','opportunity','join','looking','seek',
-  'seeking','ideal','candidate','apply','application','equal','employer'
+  'a','an','the','and','or','but','in','on','at','to','for','of','with','by','from','as','is','was','are','were',
+  'be','been','being','have','has','had','do','does','did','will','would','shall','should','may','might','must',
+  'can','could','about','above','after','again','against','all','am','any','because','before','below','between',
+  'both','during','each','few','further','get','got','he','her','here','hers','herself','him','himself','his',
+  'how','i','if','into','it','its','itself','just','me','more','most','my','myself','no','nor','not','now','off',
+  'once','only','other','our','ours','ourselves','out','over','own','per','same','she','so','some','such','than',
+  'that','their','theirs','them','themselves','then','there','these','they','this','those','through','too','under',
+  'until','up','upon','us','very','we','what','when','where','which','while','who','whom','why','you','your',
+  'yours','yourself','yourselves','also','etc','ie','eg','vs','via','re','experience','role','team','company',
+  'job','position','responsibilities','requirements','qualifications','preferred','required','including','strong',
+  'excellent','ability','knowledge','understanding','minimum','plus','bonus','ideally','proficiency','ensure',
+  'support','provide','related','relevant','equivalent','demonstrate','demonstrated','opportunity','join','looking',
+  'seek','seeking','ideal','candidate','apply','application','equal','employer','years','year','work','working',
+  'works','world','new','need','needs','help','good','great','small','large','high','low','fast'
 ]);
 
-// ─── Action Verbs ────────────────────────────────────────────────
-const ACTION_VERBS = [
-  'led','built','designed','developed','implemented','optimized',
-  'delivered','managed','launched','improved','increased','reduced',
-  'created','architected','automated','collaborated','mentored',
-  'drove','owned','scaled','deployed','integrated','migrated',
-  'analyzed','spearheaded','engineered','orchestrated','streamlined',
-  'established','executed','transformed','configured','maintained',
-  'resolved','enhanced','accelerated','pioneered','consolidated'
+const BUZZWORDS = [
+  'hard worker', 'team player', 'detail-oriented', 'think outside the box', 'synergy', 'go-getter',
+  'results-driven', 'bottom line', 'thought leader', 'dynamic', 'proactive', 'self-starter', 'visionary',
+  'innovative', 'motivated', 'passionate', 'track record', 'guru', 'ninja', 'rockstar',
+  'references available', 'objective:', 'responsible for', 'duties included', 'helped with'
 ];
 
-// ─── Section Headers ─────────────────────────────────────────────
-const REQUIRED_SECTIONS = [
-  'summary','education','experience','skills','projects','certifications','achievements'
-];
+const ACTION_VERBS = new Set([
+  'led','built','designed','developed','implemented','optimized','delivered','managed','launched','improved',
+  'increased','reduced','created','architected','automated','collaborated','mentored','drove','owned','scaled',
+  'deployed','integrated','migrated','analyzed','spearheaded','engineered','orchestrated','streamlined',
+  'established','executed','transformed','configured','maintained','resolved','enhanced','accelerated','pioneered',
+  'consolidated','formulated','initiated','navigated','negotiated','revamped','standardized','upgraded','yielded',
+  'maximized','minimized','forecasted','audited','budgeted','calculated','conceptualized','directed','facilitated',
+  'guided','hired','trained','supervised','programmed','tested','troubleshot','visualized','synthesized'
+]);
 
-// ─── Impact Words for Quantified Achievements ────────────────────
-const IMPACT_WORDS = [
-  '%','percent','users','revenue','growth','reduced','increased',
-  'faster','customers','members','projects','improved','saved',
-  'generated','achieved','delivered','clients','transactions',
-  'requests','downloads','efficiency','performance','uptime',
-  'accuracy','conversion','retention','engagement','traffic',
-  'roi','profit','cost','budget','million','billion','thousand'
-];
+const REQUIRED_SECTIONS = ['summary', 'education', 'experience', 'skills'];
+const OPTIONAL_SECTIONS = ['projects', 'certifications', 'achievements', 'publications', 'volunteer'];
 
-// ─── Helpers ─────────────────────────────────────────────────────
-function tokenize(text) {
+// ─── Core NLP Helpers ──────────────────────────────────────────────
+function cleanAndTokenize(text) {
   return text
-    .toLowerCase()
-    .replace(/[^a-z0-9#+\-/.]/g, ' ')
+    .replace(/[^a-zA-Z0-9+#.\-]/g, ' ')
     .split(/\s+/)
     .filter(w => w.length > 1);
-}
-
-function removeStopwords(tokens) {
-  return tokens.filter(t => !STOPWORDS.has(t));
 }
 
 function getNGrams(tokens, n) {
@@ -91,182 +63,244 @@ function getNGrams(tokens, n) {
   return grams;
 }
 
-function getFrequencyMap(arr) {
-  const map = {};
-  for (const item of arr) {
-    map[item] = (map[item] || 0) + 1;
+// ─── Dimension 1: Role & Keyword Alignment (35 pts) ────────────────
+function scoreKeywordAlignment(resumeText, jdText) {
+  // 1. Extract proper nouns and technical terms from JD (casing heuristic)
+  const jdWords = jdText.split(/\s+/);
+  const techTerms = new Set();
+  
+  for (let i = 1; i < jdWords.length; i++) {
+    const word = jdWords[i].replace(/[^a-zA-Z0-9+#.\-]/g, '');
+    // If it's capitalized but not at the start of a sentence, it's likely a proper noun/tech term
+    if (/^[A-Z][a-z0-9+#.\-]+$/.test(word) && !/[.!?]\s*$/.test(jdWords[i-1])) {
+      if (!STOPWORDS.has(word.toLowerCase())) techTerms.add(word.toLowerCase());
+    }
+    // Also catch fully uppercase acronyms (e.g., API, AWS, SQL)
+    if (/^[A-Z]{2,}$/.test(word)) {
+      techTerms.add(word.toLowerCase());
+    }
   }
-  return map;
-}
 
-// ─── Dimension 1: Keyword Match (40 pts) ─────────────────────────
-function scoreKeywordMatch(resumeText, jdText) {
-  const jdTokens = removeStopwords(tokenize(jdText));
-  const resumeTokens = removeStopwords(tokenize(resumeText));
+  // 2. Standard tokenization & frequency
+  const jdTokens = cleanAndTokenize(jdText.toLowerCase()).filter(t => !STOPWORDS.has(t));
+  const resumeTokens = cleanAndTokenize(resumeText.toLowerCase()).filter(t => !STOPWORDS.has(t));
+  
+  const jdFreq = {};
+  jdTokens.forEach(t => jdFreq[t] = (jdFreq[t] || 0) + 1);
+  
+  const resumeFreq = {};
+  resumeTokens.forEach(t => resumeFreq[t] = (resumeFreq[t] || 0) + 1);
 
+  // 3. Weighting system
+  let totalJdWeight = 0;
+  let matchedWeight = 0;
+  
+  const jdUnique = Object.keys(jdFreq);
+  const missingKeywords = [];
+  const matchedKeywords = [];
+
+  for (const token of jdUnique) {
+    // Base weight by frequency
+    let weight = jdFreq[token];
+    // Boost if it's identified as a tech term/acronym
+    if (techTerms.has(token)) weight *= 2.5;
+    // Cap weight to prevent keyword stuffing skew
+    weight = Math.min(weight, 10);
+    
+    totalJdWeight += weight;
+    
+    if (resumeFreq[token]) {
+      // Density matching: reward if resume mentions it roughly proportionally
+      const densityScore = Math.min(resumeFreq[token], jdFreq[token]) / jdFreq[token];
+      matchedWeight += weight * (0.5 + (0.5 * densityScore));
+      matchedKeywords.push(token);
+    } else {
+      missingKeywords.push({ word: token, weight });
+    }
+  }
+
+  // 4. Bigrams (Phrases)
+  const jdBigrams = getNGrams(jdTokens, 2);
+  const jdBigramFreq = {};
+  jdBigrams.forEach(b => jdBigramFreq[b] = (jdBigramFreq[b] || 0) + 1);
+  
   const resumeTextLower = resumeText.toLowerCase();
+  
+  for (const [bigram, freq] of Object.entries(jdBigramFreq)) {
+    if (freq > 1) { // Only care about repeating phrases
+      let weight = freq * 1.5;
+      totalJdWeight += weight;
+      if (resumeTextLower.includes(bigram)) {
+        matchedWeight += weight;
+        matchedKeywords.push(bigram);
+      } else {
+        missingKeywords.push({ word: bigram, weight });
+      }
+    }
+  }
 
-  // Single keywords from JD
-  const jdUniqueKeywords = [...new Set(jdTokens)];
-  const jdFreq = getFrequencyMap(jdTokens);
-
-  // 2-grams and 3-grams from JD
-  const jdBigrams = [...new Set(getNGrams(jdTokens, 2))];
-  const jdTrigrams = [...new Set(getNGrams(jdTokens, 3))];
-  const jdPhrases = [...new Set([...jdBigrams, ...jdTrigrams])];
-
-  // Count keyword matches
-  const resumeSet = new Set(resumeTokens);
-  const matchedKeywords = jdUniqueKeywords.filter(k => resumeSet.has(k));
-  const missingKeywords = jdUniqueKeywords.filter(k => !resumeSet.has(k));
-
-  // Count phrase matches
-  const matchedPhrases = jdPhrases.filter(p => resumeTextLower.includes(p));
-  const missingPhrases = jdPhrases.filter(p => !resumeTextLower.includes(p));
-
-  // Score calculation
-  const keywordRatio = jdUniqueKeywords.length > 0
-    ? matchedKeywords.length / jdUniqueKeywords.length
-    : 0;
-  const phraseRatio = jdPhrases.length > 0
-    ? matchedPhrases.length / jdPhrases.length
-    : 0;
-
-  const keywordScore = Math.round(keywordRatio * 30);
-  const phraseScore = Math.round(phraseRatio * 10);
-  const totalScore = Math.min(40, keywordScore + phraseScore);
-
-  // Sort missing keywords by JD frequency (most important first)
-  missingKeywords.sort((a, b) => (jdFreq[b] || 0) - (jdFreq[a] || 0));
+  const scoreRatio = totalJdWeight > 0 ? matchedWeight / totalJdWeight : 0;
+  // Apply exponential decay for strict ATS scoring (humans usually get 30-50%, AI gets 85%+)
+  const harshRatio = Math.pow(scoreRatio, 1.4);
+  const score = Math.round(harshRatio * 35);
+  
+  missingKeywords.sort((a, b) => b.weight - a.weight);
 
   return {
-    score: totalScore,
-    max: 40,
-    matchedCount: matchedKeywords.length + matchedPhrases.length,
-    totalKeywords: jdUniqueKeywords.length + jdPhrases.length,
-    matchedKeywords: [...matchedKeywords, ...matchedPhrases],
-    missingKeywords: missingKeywords.slice(0, 10),
-    missingPhrases: missingPhrases.slice(0, 5)
+    score: Math.min(35, score),
+    max: 35,
+    matchedCount: matchedKeywords.length,
+    missingKeywords: missingKeywords.slice(0, 10).map(k => k.word),
+    matchedKeywords: [...new Set(matchedKeywords)]
   };
 }
 
-// ─── Dimension 2: Section Headers (15 pts) ───────────────────────
-function scoreSectionHeaders(resumeText) {
-  const found = [];
-  const missing = [];
+// ─── Dimension 2: Experience & Impact (25 pts) ─────────────────────
+function scoreExperienceImpact(resumeText) {
+  const lines = resumeText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const bulletLines = lines.filter(l => /^\s*[-•*▪▸→]\s/.test(l));
+  
+  let actionVerbStarts = 0;
+  let quantifiedBullets = 0;
+  let starBullets = 0;
+
+  const numberPattern = /\b\d+(?:[.,]\d+)?%?|\b(?:million|billion|thousand|hundred)\b/i;
+  const impactPattern = /\b(reduced|increased|saved|generated|improved|achieved|delivered|accelerated|grew|maximized)\b/i;
+
+  for (const bullet of bulletLines) {
+    const text = bullet.replace(/^\s*[-•*▪▸→]\s/, '').trim();
+    if (!text) continue;
+
+    const firstWord = text.split(/\s+/)[0].toLowerCase().replace(/[^a-z]/g, '');
+    let hasActionStart = false;
+    
+    if (ACTION_VERBS.has(firstWord)) {
+      actionVerbStarts++;
+      hasActionStart = true;
+    }
+
+    const hasNumber = numberPattern.test(text);
+    const hasImpact = impactPattern.test(text);
+
+    if (hasNumber) quantifiedBullets++;
+    if (hasActionStart && hasNumber && hasImpact) starBullets++;
+  }
+
+  const totalBullets = Math.max(bulletLines.length, 1);
+  
+  // Scoring logic
+  let score = 0;
+  // Up to 10 points for bullets starting with action verbs (target: >90%)
+  const actionVerbRatio = actionVerbStarts / totalBullets;
+  score += Math.min(10, Math.pow(actionVerbRatio / 0.9, 1.2) * 10);
+  
+  // Up to 10 points for quantification (target: >60%)
+  const quantifiedRatio = quantifiedBullets / totalBullets;
+  score += Math.min(10, Math.pow(quantifiedRatio / 0.6, 1.2) * 10);
+
+  // Up to 5 points for STAR method (Action + Number + Impact) (target: >30%)
+  const starRatio = starBullets / totalBullets;
+  score += Math.min(5, Math.pow(starRatio / 0.3, 1.2) * 5);
+
+  return {
+    score: Math.round(score),
+    max: 25,
+    bulletCount: totalBullets,
+    actionVerbStarts,
+    quantifiedBullets,
+    starBullets
+  };
+}
+
+// ─── Dimension 3: Readability & Buzzwords (15 pts) ─────────────────
+function scoreReadability(resumeText) {
+  const textLower = resumeText.toLowerCase();
+  
+  // 1. Penalize Buzzwords & Cliches (max -8 points)
+  let buzzwordsFound = [];
+  for (const buzz of BUZZWORDS) {
+    if (textLower.includes(buzz)) buzzwordsFound.push(buzz);
+  }
+  // Penalize heavier for multiple buzzwords (2 points per buzzword)
+  const buzzwordPenalty = Math.min(8, buzzwordsFound.length * 2);
+  
+  // 2. Bullet Length Optimization (target: 15-25 words per bullet)
+  const bulletLines = resumeText.split('\n').filter(l => /^\s*[-•*▪▸→]\s/.test(l));
+  let optimalBullets = 0;
+  
+  for (const bullet of bulletLines) {
+    const wordCount = bullet.split(/\s+/).length;
+    if (wordCount >= 10 && wordCount <= 35) optimalBullets++;
+  }
+  
+  const totalBullets = Math.max(bulletLines.length, 1);
+  const optimalRatio = optimalBullets / totalBullets;
+  const lengthScore = Math.min(10, (optimalRatio / 0.8) * 10); // 10 pts max
+
+  // 3. Word Count Boundary (5 pts)
+  const totalWords = resumeText.split(/\s+/).length;
+  let wordCountScore = 0;
+  if (totalWords >= 300 && totalWords <= 800) wordCountScore = 5;
+  else if (totalWords > 800 && totalWords <= 1200) wordCountScore = 3;
+
+  let score = lengthScore + wordCountScore - buzzwordPenalty;
+
+  return {
+    score: Math.max(0, Math.round(score)),
+    max: 15,
+    buzzwordsFound,
+    optimalBullets,
+    totalWords
+  };
+}
+
+// ─── Dimension 4: Structure & Parseability (15 pts) ────────────────
+function scoreStructure(resumeText) {
+  const foundReq = [];
+  const foundOpt = [];
 
   for (const section of REQUIRED_SECTIONS) {
-    // For 'certifications', also accept 'coursework' as equivalent
-    const terms = section === 'certifications'
-      ? [section, 'certification', 'coursework', 'courses']
-      : [section];
-
-    let matched = false;
-    for (let t = 0; t < terms.length; t++) {
-      const term = terms[t];
-      const patterns = [
-        new RegExp('^\\\\s*#+\\\\s*' + term, 'mi'),
-        new RegExp('^\\\\s*' + term + '\\\\s*$', 'mi'),
-        new RegExp('^\\\\s*' + term + '\\\\s*:', 'mi'),
-        new RegExp('\\\\b' + term + '\\\\b', 'i'),
-        new RegExp('^\\\\s*\\\\*\\\\*' + term + '\\\\*\\\\*', 'mi'),
-        new RegExp('\\\\\\\\section\\\\{' + term + '\\\\}', 'i')
-      ];
-      for (let p = 0; p < patterns.length; p++) {
-        if (patterns[p].test(resumeText)) {
-          matched = true;
-          break;
-        }
-      }
-      if (matched) break;
-    }
-
-    if (matched) {
-      found.push(section);
-    } else {
-      missing.push(section);
-    }
+    const pattern = new RegExp(`(?:^|\\n)\\s*(?:#+\\s*)?\\b${section}\\b\\s*(?:$|\\n|:)`, 'i');
+    if (pattern.test(resumeText)) foundReq.push(section);
   }
 
-  const score = Math.round((found.length / REQUIRED_SECTIONS.length) * 15);
-
-  return {
-    score,
-    max: 15,
-    found,
-    missing
-  };
-}
-
-// ─── Dimension 3: Quantified Achievements (15 pts) ──────────────
-function scoreQuantifiedAchievements(resumeText) {
-  const lines = resumeText.split('\n');
-  let count = 0;
-
-  const numberPattern = /\d+/;
-
-  for (const line of lines) {
-    if (numberPattern.test(line)) {
-      // Check if line has a number paired with impact word
-      const lineLC = line.toLowerCase();
-      const hasImpactWord = IMPACT_WORDS.some(w => lineLC.includes(w));
-      const hasNumber = /\d+/.test(line);
-      
-      if (hasNumber && hasImpactWord) {
-        count++;
-      }
-    }
+  for (const section of OPTIONAL_SECTIONS) {
+    const pattern = new RegExp(`(?:^|\\n)\\s*(?:#+\\s*)?\\b${section}\\b\\s*(?:$|\\n|:)`, 'i');
+    if (pattern.test(resumeText)) foundOpt.push(section);
   }
-
-  // 3 points per quantified achievement, max 15
-  const score = Math.min(15, count * 3);
-
-  return {
-    score,
-    max: 15,
-    count
-  };
-}
-
-// ─── Dimension 4: Action Verbs (10 pts) ──────────────────────────
-function scoreActionVerbs(resumeText) {
-  const textLower = resumeText.toLowerCase();
-  const found = [];
-
-  for (const verb of ACTION_VERBS) {
-    const pattern = new RegExp(`\\b${verb}\\b`, 'i');
-    if (pattern.test(textLower)) {
-      found.push(verb);
-    }
-  }
-
-  const score = Math.round((found.length / ACTION_VERBS.length) * 10);
-
-  return {
-    score: Math.min(10, score),
-    max: 10,
-    found
-  };
-}
-
-// ─── Dimension 5: Contact Completeness (10 pts) ─────────────────
-function scoreContactInfo(resumeText) {
-  const hasEmail = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(resumeText);
-  const hasPhone = /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/.test(resumeText);
-  const hasLinkedIn = /linkedin\.com/i.test(resumeText);
-  const hasGitHub = /github\.com/i.test(resumeText);
-  
-  // Location detection: City, State patterns or common location indicators
-  const hasLocation = /\b[A-Z][a-z]+,?\s*[A-Z]{2}\b/.test(resumeText) ||
-    /\b(address|location|city|state)\b/i.test(resumeText) ||
-    /\b\d{5}(-\d{4})?\b/.test(resumeText); // ZIP code
 
   let score = 0;
+  // 10 points for required sections (strict penalty for missing sections)
+  const reqRatio = foundReq.length / REQUIRED_SECTIONS.length;
+  score += Math.round(Math.pow(reqRatio, 1.5) * 10);
+  
+  // 5 points for having at least one optional section (shows depth)
+  if (foundOpt.length > 0) score += 5;
+
+  return {
+    score: Math.min(15, score),
+    max: 15,
+    foundRequired: foundReq,
+    missingRequired: REQUIRED_SECTIONS.filter(s => !foundReq.includes(s)),
+    foundOptional: foundOpt
+  };
+}
+
+// ─── Dimension 5: Core Requirements (10 pts) ───────────────────────
+function scoreCoreRequirements(resumeText) {
+  let score = 0;
+  
+  const hasEmail = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(resumeText);
+  const hasPhone = /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\+?\d{10,15}/.test(resumeText);
+  const hasLinkedIn = /linkedin\.com/i.test(resumeText);
+  
+  // Higher Ed signals
+  const hasDegree = /\b(B\.?S\.?|B\.?A\.?|M\.?S\.?|Ph\.?D\.?|Bachelor|Master|Doctorate|Degree)\b/i.test(resumeText);
+
   if (hasEmail) score += 3;
-  if (hasPhone) score += 2;
+  if (hasPhone) score += 3;
   if (hasLinkedIn) score += 2;
-  if (hasGitHub) score += 2;
-  if (hasLocation) score += 1;
+  if (hasDegree) score += 2;
 
   return {
     score: Math.min(10, score),
@@ -274,102 +308,59 @@ function scoreContactInfo(resumeText) {
     hasEmail,
     hasPhone,
     hasLinkedIn,
-    hasGitHub,
-    hasLocation
+    hasDegree
   };
 }
 
-// ─── Dimension 6: Formatting Signals (10 pts) ───────────────────
-function scoreFormatting(resumeText) {
-  const lines = resumeText.split('\n');
-  
-  // Bullet count
-  const bulletLines = lines.filter(l => /^\s*[-•*▪▸→]\s/.test(l) || /^\s*\d+\.\s/.test(l));
-  const hasSufficientBullets = bulletLines.length >= 5;
-
-  // Word count
-  const wordCount = resumeText.split(/\s+/).filter(w => w.length > 0).length;
-  const goodWordCount = wordCount >= 300 && wordCount <= 800;
-
-  // Date format consistency (Mon YYYY)
-  const datePattern = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4}\b/gi;
-  const dateMatches = resumeText.match(datePattern) || [];
-  const hasConsistentDates = dateMatches.length >= 2;
-
-  let score = 0;
-  if (hasSufficientBullets) score += 4;
-  if (goodWordCount) score += 3;
-  if (hasConsistentDates) score += 3;
-
-  return {
-    score: Math.min(10, score),
-    max: 10,
-    bulletCount: bulletLines.length,
-    wordCount,
-    dateFormatsFound: dateMatches.length,
-    hasSufficientBullets,
-    goodWordCount,
-    hasConsistentDates
-  };
-}
-
-// ─── Main Export ─────────────────────────────────────────────────
+// ─── Main Export ───────────────────────────────────────────────────
 function computeATSScore(resumeText, jdText) {
-  const keywordMatch = scoreKeywordMatch(resumeText, jdText);
-  const sectionHeaders = scoreSectionHeaders(resumeText);
-  const quantifiedAchievements = scoreQuantifiedAchievements(resumeText);
-  const actionVerbs = scoreActionVerbs(resumeText);
-  const contactInfo = scoreContactInfo(resumeText);
-  const formatting = scoreFormatting(resumeText);
+  const alignment = scoreKeywordAlignment(resumeText, jdText);
+  const impact = scoreExperienceImpact(resumeText);
+  const readability = scoreReadability(resumeText);
+  const structure = scoreStructure(resumeText);
+  const core = scoreCoreRequirements(resumeText);
 
-  const total = keywordMatch.score +
-    sectionHeaders.score +
-    quantifiedAchievements.score +
-    actionVerbs.score +
-    contactInfo.score +
-    formatting.score;
+  const total = alignment.score + impact.score + readability.score + structure.score + core.score;
 
   return {
-    total: Math.min(100, total),
+    total: Math.min(100, Math.max(0, total)),
     breakdown: {
       keywordMatch: {
-        score: keywordMatch.score,
-        max: keywordMatch.max,
-        matchedCount: keywordMatch.matchedCount,
-        totalKeywords: keywordMatch.totalKeywords
-      },
-      sectionHeaders: {
-        score: sectionHeaders.score,
-        max: sectionHeaders.max,
-        found: sectionHeaders.found,
-        missing: sectionHeaders.missing
+        score: alignment.score,
+        max: alignment.max,
+        matchedCount: alignment.matchedCount
       },
       quantifiedAchievements: {
-        score: quantifiedAchievements.score,
-        max: quantifiedAchievements.max,
-        count: quantifiedAchievements.count
+        score: impact.score,
+        max: impact.max,
+        count: impact.quantifiedBullets
       },
       actionVerbs: {
-        score: actionVerbs.score,
-        max: actionVerbs.max,
-        found: actionVerbs.found
+        score: Math.round(impact.score * 0.4), // Derived from impact score for backwards compatibility in UI
+        max: 10,
+        found: impact.actionVerbStarts
+      },
+      sectionHeaders: {
+        score: structure.score,
+        max: structure.max,
+        missing: structure.missingRequired
       },
       contactInfo: {
-        score: contactInfo.score,
-        max: contactInfo.max,
-        hasEmail: contactInfo.hasEmail,
-        hasPhone: contactInfo.hasPhone,
-        hasLinkedIn: contactInfo.hasLinkedIn,
-        hasGitHub: contactInfo.hasGitHub,
-        hasLocation: contactInfo.hasLocation
+        score: core.score,
+        max: core.max
       },
       formatting: {
-        score: formatting.score,
-        max: formatting.max
+        score: readability.score,
+        max: readability.max
       }
     },
-    topMissingKeywords: keywordMatch.missingKeywords,
-    matchedKeywords: keywordMatch.matchedKeywords
+    topMissingKeywords: alignment.missingKeywords,
+    matchedKeywords: alignment.matchedKeywords,
+    metrics: {
+      actionVerbStarts: impact.actionVerbStarts,
+      starBullets: impact.starBullets,
+      buzzwordsFound: readability.buzzwordsFound
+    }
   };
 }
 

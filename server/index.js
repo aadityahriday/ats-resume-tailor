@@ -9,8 +9,14 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const multer = require('multer');
+const pdfParse = require('pdf-parse');
+const mammoth = require('mammoth');
 const { computeATSScore } = require('./atsScorer');
 const { rewriteResume, convertToLatex, overleafPipeline } = require('./resumeGenerator');
+const { mapToAppError } = require('./errors');
+const { withRetry } = require('./retry');
+const { scrapeJobDescription } = require('./urlScraper');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -27,16 +33,43 @@ app.use(cors({
     'http://127.0.0.1:5173',
     'https://resumecopy.com',
     'https://www.resumecopy.com',
-    /\.vercel\.app$/
+    /^https:\/\/[a-z0-9-]+\.vercel\.app$/
   ],
   credentials: true
 }));
-app.use(express.json({ limit: '5mb' }));
+app.use(express.json({ limit: '1mb' }));
+
+// ─── File Upload Middleware ───────────────────────────────────────
+const storage = multer.memoryStorage();
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword',
+      'text/plain'
+    ];
+    if (allowedTypes.includes(file.mimetype) || file.originalname.endsWith('.txt')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only PDF, DOCX, DOC, and TXT files are allowed.'));
+    }
+  }
+});
 
 // ─── Rate Limiting ───────────────────────────────────────────────
 const generateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 10,
+  keyGenerator: (req) => {
+    const apiKey = req.body.anthropicKey || req.body.openaiKey || req.body.geminiKey;
+    if (apiKey && typeof apiKey === 'string') {
+      return `key:${apiKey.substring(0, 10)}`;
+    }
+    return req.ip;
+  },
   message: {
     status: 'error',
     message: "You've hit the rate limit (10 requests/hour). Please wait before trying again."
@@ -44,6 +77,41 @@ const generateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false
 });
+
+// ─── Input Validation Middleware ───────────────────────────────
+function validateInputs(req, res, next) {
+  const { jobDescription, currentResume } = req.body;
+  
+  if (!jobDescription || typeof jobDescription !== 'string' || jobDescription.length < 50) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Job description is too short or invalid. Please provide a complete job posting.'
+    });
+  }
+  
+  if (jobDescription.length > 50000) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Job description is too long. Please provide a shorter job posting.'
+    });
+  }
+  
+  if (!currentResume || typeof currentResume !== 'string' || currentResume.length < 100) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Resume is too short or invalid. Please provide a complete resume.'
+    });
+  }
+  
+  if (currentResume.length > 100000) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Resume is too long. Please provide a shorter resume.'
+    });
+  }
+  
+  next();
+}
 
 // ─── API Key Validation Helpers ──────────────────────────────────
 function validateApiKey(provider, apiKey) {
@@ -89,9 +157,19 @@ app.get('/api/health', (req, res) => {
 });
 
 // ─── Main Generate Endpoint ─────────────────────────────────────
-app.post('/api/generate', generateLimiter, async (req, res) => {
+app.post('/api/generate', generateLimiter, validateInputs, async (req, res) => {
   const startTime = Date.now();
   const stepTimings = {};
+  
+  // Overall timeout handler
+  const timeout = setTimeout(() => {
+    if (!res.headersSent) {
+      res.status(504).json({
+        status: 'error',
+        message: 'Request timed out. Please try again.'
+      });
+    }
+  }, 180000); // 3 minute total timeout
 
   try {
     const {
@@ -101,12 +179,12 @@ app.post('/api/generate', generateLimiter, async (req, res) => {
       anthropicKey,
       openaiKey,
       geminiKey,
-      overleafSession,
-      overleafGclb
+      overleafSession
     } = req.body;
 
     // ── Validation ──
     if (!jobDescription || !jobDescription.trim()) {
+      clearTimeout(timeout);
       return res.status(400).json({
         status: 'error',
         message: 'Job description is required. Paste the full job posting for best results.'
@@ -114,6 +192,7 @@ app.post('/api/generate', generateLimiter, async (req, res) => {
     }
 
     if (!currentResume || !currentResume.trim()) {
+      clearTimeout(timeout);
       return res.status(400).json({
         status: 'error',
         message: 'Current resume is required. Paste your resume as plain text.'
@@ -137,6 +216,7 @@ app.post('/api/generate', generateLimiter, async (req, res) => {
 
     const keyValidation = validateApiKey(aiProvider, apiKey);
     if (!keyValidation.valid) {
+      clearTimeout(timeout);
       return res.status(400).json({
         status: 'error',
         message: keyValidation.message
@@ -145,13 +225,12 @@ app.post('/api/generate', generateLimiter, async (req, res) => {
 
     const session = overleafSession || process.env.OVERLEAF_SESSION_COOKIE;
     if (!session) {
+      clearTimeout(timeout);
       return res.status(400).json({
         status: 'error',
         message: 'Overleaf session cookie not configured. Open Setup above and follow the cookie guide.'
       });
     }
-
-    const gclb = overleafGclb || process.env.OVERLEAF_GCLB_TOKEN || '';
 
     console.log(`[generate] Using AI provider: ${getProviderName(aiProvider)}`);
 
@@ -162,7 +241,10 @@ app.post('/api/generate', generateLimiter, async (req, res) => {
 
     // ── Step 2: AI Rewrite ──
     stepStart = Date.now();
-    const markdownResume = await rewriteResume(aiProvider, apiKey, jobDescription, currentResume);
+    const markdownResume = await withRetry(
+      () => rewriteResume(aiProvider, apiKey, jobDescription, currentResume),
+      { retries: 2, minDelayMs: 1000, maxDelayMs: 5000 }
+    );
     stepTimings.rewrite = Date.now() - stepStart;
 
     // ── Step 3: After Score ──
@@ -172,24 +254,31 @@ app.post('/api/generate', generateLimiter, async (req, res) => {
 
     // ── Step 4: LaTeX Conversion ──
     stepStart = Date.now();
-    const latexCode = await convertToLatex(aiProvider, apiKey, markdownResume);
+    const latexCode = await withRetry(
+      () => convertToLatex(aiProvider, apiKey, markdownResume),
+      { retries: 2, minDelayMs: 1000, maxDelayMs: 5000 }
+    );
     stepTimings.latex = Date.now() - stepStart;
 
     // ── Steps 5-9: Overleaf Pipeline ──
     stepStart = Date.now();
-    const overleafResult = await overleafPipeline(latexCode, session, gclb);
+    const overleafResult = await withRetry(
+      () => overleafPipeline(latexCode, session),
+      { retries: 2, minDelayMs: 1000, maxDelayMs: 5000 }
+    );
     stepTimings.overleaf = Date.now() - stepStart;
 
     if (overleafResult.compileFailed) {
+      clearTimeout(timeout);
       return res.json({
         status: 'partial',
         message: `PDF compilation failed on Overleaf. You can open your project to debug and compile manually.`,
         aiProvider,
         beforeScore,
         afterScore,
-        markdownResume,
-        latexCode,
-        projectUrl: overleafResult.projectUrl,
+        markdownResume: markdownResume || '',
+        latexCode: latexCode || '',
+        projectUrl: overleafResult.projectUrl || '',
         pdfBase64: null,
         timings: stepTimings,
         totalTime: Date.now() - startTime
@@ -197,6 +286,7 @@ app.post('/api/generate', generateLimiter, async (req, res) => {
     }
 
     if (overleafResult.downloadFailed) {
+      clearTimeout(timeout);
       return res.json({
         status: 'success',
         message: `PDF compiled successfully but could not be auto-downloaded. Open the Overleaf project to download it.`,
@@ -211,6 +301,7 @@ app.post('/api/generate', generateLimiter, async (req, res) => {
       });
     }
 
+    clearTimeout(timeout);
     return res.json({
       status: 'success',
       aiProvider,
@@ -225,6 +316,8 @@ app.post('/api/generate', generateLimiter, async (req, res) => {
     });
 
   } catch (error) {
+    clearTimeout(timeout);
+    
     // Never log resume or JD content
     console.error('[generate] Pipeline error:', error.message);
 
@@ -251,11 +344,17 @@ app.post('/api/generate', generateLimiter, async (req, res) => {
       userMessage = 'Your Gemini API key is invalid. Go to aistudio.google.com → Get API Key → create a new key.';
     } else if (error.message.includes('RESOURCE_EXHAUSTED')) {
       userMessage = 'Gemini API quota exhausted. Wait a moment or check your usage at aistudio.google.com.';
+    } else {
+      console.error('[generate] Unmapped error:', error.message);
+      userMessage = 'An unexpected error occurred. Please try again.';
     }
 
-    return res.status(500).json({
+    // Use typed error if available
+    const appError = mapToAppError(error);
+    return res.status(appError.statusCode).json({
       status: 'error',
-      message: userMessage,
+      message: appError.userMessage || userMessage,
+      code: appError.code,
       timings: stepTimings,
       totalTime: Date.now() - startTime
     });
@@ -273,6 +372,86 @@ app.post('/api/score', (req, res) => {
     return res.json({ status: 'success', score });
   } catch (error) {
     return res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// ─── File Parsing Endpoint ───────────────────────────────────────
+app.post('/api/parse-file', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ status: 'error', message: 'No file uploaded.' });
+    }
+
+    const { buffer, mimetype, originalname } = req.file;
+    let text = '';
+
+    // Parse based on file type
+    if (mimetype === 'application/pdf' || originalname.endsWith('.pdf')) {
+      const data = await pdfParse(buffer);
+      text = data.text;
+    } else if (
+      mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      originalname.endsWith('.docx')
+    ) {
+      const result = await mammoth.extractRawText({ buffer });
+      text = result.value;
+    } else if (
+      mimetype === 'application/msword' ||
+      originalname.endsWith('.doc')
+    ) {
+      // DOC files require additional library, return error for now
+      return res.status(400).json({ 
+        status: 'error', 
+        message: 'Legacy .doc files are not supported. Please save as .docx or .txt.' 
+      });
+    } else if (mimetype === 'text/plain' || originalname.endsWith('.txt')) {
+      text = buffer.toString('utf-8');
+    } else {
+      return res.status(400).json({ status: 'error', message: 'Unsupported file type.' });
+    }
+
+    // Clean up the extracted text
+    text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+
+    return res.json({ status: 'success', text });
+  } catch (error) {
+    console.error('[parse-file] Error:', error);
+    return res.status(500).json({ 
+      status: 'error', 
+      message: 'Failed to parse file. Please try again or copy-paste the text directly.' 
+    });
+  }
+});
+
+// ─── Job Description URL Scraper Endpoint ───────────────────────
+app.post('/api/scrape-url', async (req, res) => {
+  try {
+    const { url } = req.body;
+    
+    if (!url) {
+      return res.status(400).json({ status: 'error', message: 'URL is required.' });
+    }
+
+    // Validate URL
+    try {
+      new URL(url);
+    } catch {
+      return res.status(400).json({ status: 'error', message: 'Invalid URL format.' });
+    }
+
+    const result = await scrapeJobDescription(url);
+
+    if (result.success) {
+      return res.json({ status: 'success', text: result.text });
+    } else {
+      return res.status(400).json({ status: 'error', message: result.error });
+    }
+  } catch (error) {
+    console.error('[scrape-url] Error:', error);
+    return res.status(500).json({ 
+      status: 'error', 
+      message: 'Failed to scrape URL. Please copy-paste the job description directly.' 
+    });
   }
 });
 

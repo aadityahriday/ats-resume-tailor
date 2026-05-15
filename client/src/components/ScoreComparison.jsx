@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import ATSScoreVisualization from './ATSScoreVisualization'
 
 function AnimatedNumber({ value, duration = 800, delay = 0, color = 'text-text' }) {
   const [display, setDisplay] = useState(0)
@@ -92,7 +93,7 @@ export default function ScoreComparison({ beforeScore, afterScore }) {
     <section className="max-w-4xl mx-auto px-6 py-8 animate-fade-in" id="score-comparison">
       <div className="bg-surface border border-border rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border/40 flex items-center justify-between" style={{ background: 'linear-gradient(180deg, rgba(24,28,38,0.5) 0%, transparent 100%)' }}>
+        <div className="px-6 py-4 border-b border-border/40 flex items-center justify-between bg-surface-raised/50">
           <div className="flex items-center gap-3">
             <span className="text-lg">📊</span>
             <h3 className="font-mono text-text/90 font-semibold text-xs tracking-[0.1em] uppercase">ATS Score Analysis</h3>
@@ -234,6 +235,9 @@ export default function ScoreComparison({ beforeScore, afterScore }) {
           )}
         </div>
       </div>
+
+      {/* Radar Chart Visualization */}
+      <ATSScoreVisualization beforeScore={beforeScore} afterScore={afterScore} />
     </section>
   )
 }

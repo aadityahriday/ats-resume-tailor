@@ -137,7 +137,7 @@ export default function HowItWorks() {
             },
             {
               title: 'Multi-Model AI Support',
-              desc: 'Choose between Claude Opus 4 (deep thinking), GPT-4.1 (latest flagship), or Gemini 2.5 Pro (advanced reasoning) for the best results.',
+              desc: 'Start free with Gemini 2.5 Flash (no credit card), or upgrade to GPT-4o or Claude 3.7 Sonnet for premium quality.',
               icon: '🧠'
             },
             {
@@ -207,7 +207,7 @@ export default function HowItWorks() {
             },
             {
               q: 'What AI models are supported?',
-              a: 'ResumeCopy supports Claude Opus 4 by Anthropic (with extended thinking), GPT-4.1 by OpenAI (latest flagship model), and Gemini 2.5 Pro by Google (advanced reasoning). You can switch between them at any time.'
+              a: 'Three options: Gemini 2.5 Flash by Google (FREE, no credit card needed — recommended), GPT-4o by OpenAI (paid, popular), and Claude 3.7 Sonnet by Anthropic (paid, premium quality with extended thinking). You can switch between them at any time.'
             },
             {
               q: 'How long does it take to generate a resume?',

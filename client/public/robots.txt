@@ -1,9 +1,38 @@
+# ResumeCopy — robots.txt
+# https://resumecopy.com
+
 User-agent: *
 Allow: /
+Disallow: /api/
+Host: https://resumecopy.com
 Sitemap: https://resumecopy.com/sitemap.xml
 
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 0
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 1
+
+# Block AI training scrapers (protect content IP)
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /

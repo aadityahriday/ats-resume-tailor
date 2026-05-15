@@ -1,0 +1,22 @@
+{
+  "name": "ResumeCopy — Free AI Resume Builder & ATS Optimizer",
+  "short_name": "ResumeCopy",
+  "description": "Build ATS-optimized resumes that score 90+ with AI. Free, private, no sign-up required. Powered by Claude, ChatGPT, and Gemini.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0D11",
+  "theme_color": "#FF9F43",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"],
+  "lang": "en",
+  "dir": "ltr",
+  "scope": "/"
+}

@@ -325,44 +325,58 @@ CRITICAL:
 // ═══════════════════════════════════════════════════════════════════
 
 async function rewriteWithAnthropic(apiKey, jobDescription, currentResume) {
-  const Anthropic = (await import('@anthropic-ai/sdk')).default;
+  let Anthropic;
+  try {
+    Anthropic = (await import('@anthropic-ai/sdk')).default;
+  } catch (err) {
+    throw new Error('Failed to load Anthropic SDK. Please ensure @anthropic-ai/sdk is installed.');
+  }
   const client = new Anthropic({ apiKey });
 
-  console.log('[anthropic] Using claude-opus-4 with extended thinking (10k budget)...');
+  console.log('[anthropic] Using claude-3-7-sonnet with extended thinking (10k budget)...');
 
   const response = await client.messages.create({
-    model: 'claude-opus-4-20250514',
+    model: process.env.ANTHROPIC_MODEL || 'claude-3-7-sonnet-20250219',
     max_tokens: 16000,
+    system: REWRITE_SYSTEM_PROMPT,
     thinking: {
       type: 'enabled',
       budget_tokens: 10000
     },
     messages: [
       { role: 'user', content: getRewriteUserPrompt(jobDescription, currentResume) }
-    ],
-    system: REWRITE_SYSTEM_PROMPT
+    ]
   });
 
-  // Extract text from response (skip thinking blocks)
+  // Check if response was truncated
+  if (response.stop_reason === 'max_tokens') {
+    console.warn('[anthropic] Response truncated, may need higher max_tokens');
+  }
+
   const textBlock = response.content.find(b => b.type === 'text');
   return textBlock ? textBlock.text : response.content[0].text;
 }
 
 async function latexWithAnthropic(apiKey, markdownResume) {
-  const Anthropic = (await import('@anthropic-ai/sdk')).default;
+  let Anthropic;
+  try {
+    Anthropic = (await import('@anthropic-ai/sdk')).default;
+  } catch (err) {
+    throw new Error('Failed to load Anthropic SDK. Please ensure @anthropic-ai/sdk is installed.');
+  }
   const client = new Anthropic({ apiKey });
 
   const response = await client.messages.create({
-    model: 'claude-opus-4-20250514',
+    model: process.env.ANTHROPIC_MODEL || 'claude-3-7-sonnet-20250219',
     max_tokens: 16000,
+    system: LATEX_SYSTEM_PROMPT,
     thinking: {
       type: 'enabled',
       budget_tokens: 8000
     },
     messages: [
       { role: 'user', content: getLatexUserPrompt(markdownResume) }
-    ],
-    system: LATEX_SYSTEM_PROMPT
+    ]
   });
 
   const textBlock = response.content.find(b => b.type === 'text');
@@ -371,17 +385,22 @@ async function latexWithAnthropic(apiKey, markdownResume) {
 
 
 // ═══════════════════════════════════════════════════════════════════
-//  OPENAI (GPT-4.1) — Best flagship model
+//  OPENAI (GPT-4o) — Latest flagship model
 // ═══════════════════════════════════════════════════════════════════
 
 async function rewriteWithOpenAI(apiKey, jobDescription, currentResume) {
-  const { default: OpenAI } = await import('openai');
+  let OpenAI;
+  try {
+    OpenAI = (await import('openai')).default;
+  } catch (err) {
+    throw new Error('Failed to load OpenAI SDK. Please ensure openai is installed.');
+  }
   const client = new OpenAI({ apiKey });
 
-  console.log('[openai] Using gpt-4.1 (latest flagship)...');
+  console.log('[openai] Using gpt-4o (latest flagship)...');
 
   const response = await client.chat.completions.create({
-    model: 'gpt-4.1',
+    model: process.env.OPENAI_MODEL || 'gpt-4o',
     max_tokens: 8192,
     temperature: 0.3,
     messages: [
@@ -394,11 +413,16 @@ async function rewriteWithOpenAI(apiKey, jobDescription, currentResume) {
 }
 
 async function latexWithOpenAI(apiKey, markdownResume) {
-  const { default: OpenAI } = await import('openai');
+  let OpenAI;
+  try {
+    OpenAI = (await import('openai')).default;
+  } catch (err) {
+    throw new Error('Failed to load OpenAI SDK. Please ensure openai is installed.');
+  }
   const client = new OpenAI({ apiKey });
 
   const response = await client.chat.completions.create({
-    model: 'gpt-4.1',
+    model: process.env.OPENAI_MODEL || 'gpt-4o',
     max_tokens: 8192,
     temperature: 0.2,
     messages: [
@@ -416,13 +440,18 @@ async function latexWithOpenAI(apiKey, markdownResume) {
 // ═══════════════════════════════════════════════════════════════════
 
 async function rewriteWithGemini(apiKey, jobDescription, currentResume) {
-  const { GoogleGenerativeAI } = await import('@google/generative-ai');
+  let GoogleGenerativeAI;
+  try {
+    GoogleGenerativeAI = (await import('@google/generative-ai')).GoogleGenerativeAI;
+  } catch (err) {
+    throw new Error('Failed to load Gemini SDK. Please ensure @google/generative-ai is installed.');
+  }
   const genAI = new GoogleGenerativeAI(apiKey);
 
-  console.log('[gemini] Using gemini-2.5-pro with thinking enabled...');
+  console.log('[gemini] Using gemini-2.5-flash (free tier) with thinking enabled...');
 
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-pro-preview-05-06',
+    model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
     systemInstruction: REWRITE_SYSTEM_PROMPT
   });
 
@@ -443,11 +472,16 @@ async function rewriteWithGemini(apiKey, jobDescription, currentResume) {
 }
 
 async function latexWithGemini(apiKey, markdownResume) {
-  const { GoogleGenerativeAI } = await import('@google/generative-ai');
+  let GoogleGenerativeAI;
+  try {
+    GoogleGenerativeAI = (await import('@google/generative-ai')).GoogleGenerativeAI;
+  } catch (err) {
+    throw new Error('Failed to load Gemini SDK. Please ensure @google/generative-ai is installed.');
+  }
   const genAI = new GoogleGenerativeAI(apiKey);
 
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-pro-preview-05-06',
+    model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
     systemInstruction: LATEX_SYSTEM_PROMPT
   });
 
@@ -476,7 +510,21 @@ function sanitizeLatex(latex) {
   let result = latex;
 
   // Remove markdown code fences if present
-  result = result.replace(/^```latex\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```\s*$/m, '');
+  result = result.replace(/^```latex\s*/i, '').replace(/^```(tex|text)?\s*/i, '').replace(/\s*```\s*$/m, '');
+
+  // ── Unicode normalization (silent pdflatex killers) ──
+  // Smart quotes → straight quotes
+  result = result.replace(/[\u2018\u2019]/g, "'");
+  result = result.replace(/[\u201C\u201D]/g, '"');
+  // Em-dash and en-dash → LaTeX dashes
+  result = result.replace(/\u2014/g, '---');
+  result = result.replace(/\u2013/g, '--');
+  // Zero-width and invisible characters → strip
+  result = result.replace(/[\u200B\u200C\u200D\uFEFF]/g, '');
+  // Ellipsis character → three dots
+  result = result.replace(/\u2026/g, '...');
+  // Unicode bullet characters → LaTeX bullet command
+  result = result.replace(/[\u2022\u2023\u25E6\u2043\u2219]/g, '\\textbullet{}');
 
   // Replace $|$ separators with \textbar{} (the #1 cause of stray $ signs)
   result = result.replace(/\$\s*\|\s*\$/g, '\\textbar{}');
@@ -558,33 +606,37 @@ async function convertToLatex(provider, apiKey, markdownResume) {
       break;
   }
 
-  // Sanitize the generated LaTeX
-  latexCode = sanitizeLatex(latexCode);
-
-  return latexCode;
+  // Sanitize the generated LaTeX and return ONLY the clean string.
+  // (Overleaf compilation now lives exclusively in overleafPipeline.)
+  return sanitizeLatex(latexCode);
 }
 
+// ═══════════════════════════════════════════════════════════════════
+//  OVERLEAF PIPELINE — Compile LaTeX to PDF using user's free Overleaf account
+// ═══════════════════════════════════════════════════════════════════
 
-// ─── Steps 5-9: Overleaf Pipeline ───────────────────────────────
-async function overleafPipeline(latexCode, overleafSession, overleafGclb) {
-  // Step 5 — Decode credentials
-  const SESSION_COOKIE = decodeURIComponent(overleafSession);
-  const GCLB_TOKEN = overleafGclb || '';
-  
-  const cookieString = GCLB_TOKEN 
-    ? `overleaf_session2=${SESSION_COOKIE}; GCLB=${GCLB_TOKEN}`
-    : `overleaf_session2=${SESSION_COOKIE}`;
+async function overleafPipeline(latexCode, overleafSession) {
+  // Step 1 — Decode session cookie safely
+  let SESSION_COOKIE;
+  try {
+    SESSION_COOKIE = decodeURIComponent(overleafSession);
+  } catch (err) {
+    throw new Error('Invalid Overleaf session cookie encoding. Please re-copy the cookie value from your browser.');
+  }
+
+  const cookieString = `overleaf_session2=${SESSION_COOKIE}`;
 
   const commonHeaders = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
     'Cookie': cookieString
   };
 
-  // Step 6 — Fetch CSRF token
+  // Step 2 — Fetch CSRF token from /project page
   const projectPageRes = await fetch('https://www.overleaf.com/project', {
     method: 'GET',
     headers: commonHeaders,
-    redirect: 'follow'
+    redirect: 'follow',
+    signal: AbortSignal.timeout(30000)
   });
 
   if (!projectPageRes.ok) {
@@ -593,16 +645,16 @@ async function overleafPipeline(latexCode, overleafSession, overleafGclb) {
 
   const html = await projectPageRes.text();
   const csrfMatch = html.match(/name="ol-csrfToken"\s+content="([^"]+)"/) ||
-                     html.match(/content="([^"]+)"\s+name="ol-csrfToken"/) ||
-                     html.match(/"csrfToken"\s*:\s*"([^"]+)"/) ||
-                     html.match(/ol-csrfToken.*?content="([^"]+)"/);
+                    html.match(/content="([^"]+)"\s+name="ol-csrfToken"/) ||
+                    html.match(/"csrfToken"\s*:\s*"([^"]+)"/) ||
+                    html.match(/ol-csrfToken.*?content="([^"]+)"/);
 
   if (!csrfMatch) {
-    throw new Error('Overleaf session expired — please refresh your session cookie in the Setup panel.');
+    throw new Error('Overleaf session expired — please refresh your overleaf_session2 cookie in the Setup panel.');
   }
   const csrfToken = csrfMatch[1];
 
-  // Step 7 — Create project and upload LaTeX
+  // Step 3 — Create project and upload LaTeX (POST /docs with snip + pdflatex)
   const formBody = new URLSearchParams({
     '_csrf': csrfToken,
     'snip': latexCode,
@@ -619,11 +671,13 @@ async function overleafPipeline(latexCode, overleafSession, overleafGclb) {
       'Origin': 'https://www.overleaf.com'
     },
     body: formBody.toString(),
-    redirect: 'manual'
+    redirect: 'manual',
+    signal: AbortSignal.timeout(30000)
   });
 
+  // Step 4 — Extract project ID from Location header, body, or response URL
   const locationHeader = createRes.headers.get('location') || createRes.headers.get('Location') || '';
-  
+
   let projectId;
   const projectIdMatch = locationHeader.match(/\/project\/([a-f0-9]{24})/) ||
                           (createRes.url && createRes.url.match(/\/project\/([a-f0-9]{24})/));
@@ -641,10 +695,12 @@ async function overleafPipeline(latexCode, overleafSession, overleafGclb) {
   }
 
   const projectUrl = `https://www.overleaf.com/project/${projectId}`;
+  console.log('[overleaf] Project created:', projectUrl);
 
-  // Step 8 — Compile project
+  // Step 5 — Wait briefly for project to initialize
   await new Promise(r => setTimeout(r, 2000));
 
+  // Step 6 — Compile project (correct body: { check, draft, stopOnFirstError })
   const compileRes = await fetch(`https://www.overleaf.com/project/${projectId}/compile`, {
     method: 'POST',
     headers: {
@@ -657,7 +713,8 @@ async function overleafPipeline(latexCode, overleafSession, overleafGclb) {
       check: 'silent',
       draft: false,
       stopOnFirstError: false
-    })
+    }),
+    signal: AbortSignal.timeout(60000)
   });
 
   if (!compileRes.ok) {
@@ -666,21 +723,22 @@ async function overleafPipeline(latexCode, overleafSession, overleafGclb) {
 
   const compileResponse = await compileRes.json();
   console.log('[overleaf] Compile status:', compileResponse.status);
-  
+
   const pdfFile = compileResponse.outputFiles?.find(f => f.path === 'output.pdf');
   if (!pdfFile) {
-    console.log('[overleaf] No output.pdf found. Available files:', 
+    console.log('[overleaf] No output.pdf found. Available files:',
       compileResponse.outputFiles?.map(f => f.path).join(', ') || 'none');
     return {
       projectUrl,
       pdfUrl: null,
       pdfBase64: null,
       compileFailed: true,
+      downloadFailed: false,
       compileStatus: compileResponse.status || 'unknown'
     };
   }
 
-  // Build PDF download URL
+  // Step 7 — Build canonical PDF download URL
   let pdfPath = pdfFile.url;
   if (pdfPath && !pdfPath.includes(`/project/${projectId}`)) {
     const cleanPath = pdfPath.startsWith('/') ? pdfPath : `/${pdfPath}`;
@@ -693,23 +751,33 @@ async function overleafPipeline(latexCode, overleafSession, overleafGclb) {
   const pdfUrl = `https://www.overleaf.com${pdfPath}`;
   console.log('[overleaf] PDF URL:', pdfUrl);
 
-  // Step 9 — Download PDF (with retry)
-  let pdfRes = await fetch(pdfUrl, { headers: commonHeaders });
+  // Step 8 — Download PDF, with 3 fallback URL patterns
+  console.log('[overleaf] Downloading PDF...');
+  let pdfRes = await fetch(pdfUrl, {
+    headers: commonHeaders,
+    signal: AbortSignal.timeout(30000)
+  });
 
-  if (pdfRes.status === 404) {
-    console.log('[overleaf] Primary URL returned 404, trying alternatives...');
-    
-    const altUrl1 = `https://www.overleaf.com${pdfFile.url}`;
-    if (altUrl1 !== pdfUrl) {
-      pdfRes = await fetch(altUrl1, { headers: commonHeaders });
+  if (!pdfRes.ok) {
+    console.log('[overleaf] Primary URL failed, trying alternatives...');
+
+    if (pdfFile && pdfFile.url) {
+      const rawUrl = pdfFile.url.startsWith('http') ? pdfFile.url : `https://www.overleaf.com${pdfFile.url}`;
+      pdfRes = await fetch(rawUrl, { headers: commonHeaders, signal: AbortSignal.timeout(30000) });
     }
-    if (pdfRes.status === 404) {
-      const altUrl2 = `https://www.overleaf.com/project/${projectId}/output/output.pdf`;
-      pdfRes = await fetch(altUrl2, { headers: commonHeaders });
+
+    if (!pdfRes.ok) {
+      pdfRes = await fetch(`https://www.overleaf.com/project/${projectId}/compile/pdf`, {
+        headers: commonHeaders,
+        signal: AbortSignal.timeout(30000)
+      });
     }
-    if (pdfRes.status === 404) {
-      const altUrl3 = `https://www.overleaf.com/project/${projectId}/compile/pdf`;
-      pdfRes = await fetch(altUrl3, { headers: commonHeaders });
+
+    if (!pdfRes.ok) {
+      pdfRes = await fetch(`https://www.overleaf.com/project/${projectId}/output/output.pdf`, {
+        headers: commonHeaders,
+        signal: AbortSignal.timeout(30000)
+      });
     }
   }
 
@@ -724,6 +792,7 @@ async function overleafPipeline(latexCode, overleafSession, overleafGclb) {
     };
   }
 
+  // Step 9 — Convert PDF buffer to base64 and return
   const pdfBuffer = await pdfRes.arrayBuffer();
   const pdfBase64 = Buffer.from(pdfBuffer).toString('base64');
 
@@ -731,12 +800,12 @@ async function overleafPipeline(latexCode, overleafSession, overleafGclb) {
     projectUrl,
     pdfUrl,
     pdfBase64,
-    compileFailed: false
+    compileFailed: false,
+    downloadFailed: false
   };
 }
 
 module.exports = {
-  computeATSScore,
   rewriteResume,
   convertToLatex,
   overleafPipeline

@@ -17,26 +17,35 @@ export default function HistoryPanel({ refreshTrigger, onRerun, onShowDiff }) {
 
   const handleDownloadPdf = (entry) => {
     if (!entry.pdfBase64) return
-    const byteCharacters = atob(entry.pdfBase64)
-    const byteNumbers = new Array(byteCharacters.length)
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i)
+    try {
+      const byteCharacters = atob(entry.pdfBase64)
+      const byteNumbers = new Array(byteCharacters.length)
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i)
+      }
+      const byteArray = new Uint8Array(byteNumbers)
+      const blob = new Blob([byteArray], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'tailored_resume.pdf'
+      document.body.appendChild(a)
+      a.click()
+      setTimeout(() => {
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }, 5000)
+    } catch (err) {
+      console.error('PDF download failed:', err)
+      alert('Failed to download PDF. Please try again.')
     }
-    const byteArray = new Uint8Array(byteNumbers)
-    const blob = new Blob([byteArray], { type: 'application/pdf' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'tailored_resume.pdf'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
   }
 
   const handleClearHistory = () => {
-    localStorage.removeItem('ats_resume_history')
-    setHistory([])
+    if (confirm('Are you sure you want to clear all generation history? This cannot be undone.')) {
+      localStorage.removeItem('ats_resume_history')
+      setHistory([])
+    }
   }
 
   const formatDate = (ts) => {
