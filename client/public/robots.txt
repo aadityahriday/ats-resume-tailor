@@ -4,12 +4,10 @@
 User-agent: *
 Allow: /
 Disallow: /api/
-Host: https://resumecopy.com
 Sitemap: https://resumecopy.com/sitemap.xml
 
 User-agent: Googlebot
 Allow: /
-Crawl-delay: 0
 
 User-agent: Bingbot
 Allow: /
